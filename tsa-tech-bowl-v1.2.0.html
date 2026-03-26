@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<!-- TSA Tech Bowl Study Tool v1.2.0 -->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TSA Tech Bowl — Study Tool v1.2.0</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow:wght@300;400;600;700;900&family=Barlow+Condensed:wght@700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #050a0f;
+    --panel: #0a1520;
+    --border: #0e2a40;
+    --accent: #00d4ff;
+    --accent2: #00ff99;
+    --accent3: #ff6b35;
+    --text: #cce8f4;
+    --muted: #4a7a99;
+    --correct: #00ff99;
+    --wrong: #ff3d6e;
+    --mono: 'Share Tech Mono', monospace;
+    --sans: 'Barlow', sans-serif;
+    --cond: 'Barlow Condensed', sans-serif;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .app {
+    position: relative;
+    z-index: 1;
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 24px 20px 60px;
+  }
+  header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 32px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .logo-block h1 {
+    font-family: var(--cond);
+    font-size: 2.6rem;
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--accent);
+    text-shadow: 0 0 30px rgba(0,212,255,0.4);
+  }
+  .logo-block p {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: var(--muted);
+    letter-spacing: 0.12em;
+    margin-top: 4px;
+  }
+  .countdown { text-align: right; font-family: var(--mono); }
+  .countdown .days { font-size: 2rem; color: var(--accent3); font-weight: 700; }
+  .countdown .label { font-size: 0.65rem; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; }
+  .score-bar { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+  .stat-chip {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 8px 14px;
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .stat-chip span { color: var(--accent); font-size: 1rem; font-weight: 700; }
+  .stat-chip.green span { color: var(--correct); }
+  .stat-chip.red span { color: var(--wrong); }
+  .progress-bar { height: 3px; background: var(--border); border-radius: 2px; margin-bottom: 24px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 2px; transition: width 0.5s ease; width: 0%; }
+  .section-label {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+  .cat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+  .cat-btn {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 10px 14px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: left;
+  }
+  .cat-btn:hover { border-color: var(--accent); background: rgba(0,212,255,0.05); }
+  .cat-btn.active { border-color: var(--accent); background: rgba(0,212,255,0.1); box-shadow: 0 0 12px rgba(0,212,255,0.15); }
+  .cat-icon { font-size: 1.1rem; margin-bottom: 4px; }
+  .cat-name { font-family: var(--cond); font-size: 0.82rem; font-weight: 700; letter-spacing: 0.03em; color: var(--text); text-transform: uppercase; }
+  .cat-count { font-family: var(--mono); font-size: 0.58rem; color: var(--muted); margin-top: 2px; }
+  .cat-btn.active .cat-name { color: var(--accent); }
+
+  .mode-row { display: flex; gap: 8px; margin-bottom: 24px; align-items: center; flex-wrap: wrap; }
+  .mode-label { font-family: var(--mono); font-size: 0.65rem; color: var(--muted); letter-spacing: 0.1em; }
+  .mode-btn {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 6px 14px;
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .mode-btn:hover { border-color: var(--accent2); color: var(--accent2); }
+  .mode-btn.active { border-color: var(--accent2); color: var(--accent2); background: rgba(0,255,153,0.07); }
+
+  .src-row { display: flex; gap: 8px; margin-bottom: 16px; align-items: center; flex-wrap: wrap; }
+  .src-btn {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 6px 14px;
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .src-btn:hover { border-color: var(--accent); color: var(--text); }
+  .src-btn.active { border-color: var(--accent); color: var(--text); background: rgba(0,212,255,0.07); }
+  .src-btn.active .src-dot { color: var(--correct); }
+  .src-btn:not(.active) { opacity: 0.5; }
+  .src-dot { font-size: 0.75rem; transition: color 0.2s; }
+
+  .go-btn {
+    width: 100%;
+    padding: 16px;
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    border-radius: 4px;
+    font-family: var(--cond);
+    font-size: 1.1rem;
+    font-weight: 900;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s;
+    margin-bottom: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+  .go-btn:hover:not(:disabled) { background: #33ddff; transform: translateY(-1px); }
+  .go-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .q-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 28px;
+    margin-bottom: 16px;
+    position: relative;
+    overflow: hidden;
+    animation: fadeIn 0.25s ease;
+  }
+  .q-card::before { content: ''; position: absolute; top: 0; left: 0; width: 3px; height: 100%; background: var(--accent); }
+  .q-meta { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; gap: 8px; flex-wrap: wrap; }
+  .q-cat-tag {
+    font-family: var(--mono); font-size: 0.63rem; letter-spacing: 0.1em; color: var(--accent);
+    text-transform: uppercase; background: rgba(0,212,255,0.08); border: 1px solid rgba(0,212,255,0.2);
+    padding: 3px 8px; border-radius: 2px;
+  }
+  .q-num { font-family: var(--mono); font-size: 0.68rem; color: var(--muted); }
+  .q-text { font-size: 1.12rem; font-weight: 400; line-height: 1.6; color: #e8f4ff; margin-bottom: 22px; }
+  .options { display: flex; flex-direction: column; gap: 8px; }
+  .opt-btn {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 12px 16px;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    font-size: 0.93rem;
+    color: var(--text);
+    font-family: var(--sans);
+    line-height: 1.45;
+    width: 100%;
+  }
+  .opt-btn:not(:disabled):hover { border-color: var(--accent); background: rgba(0,212,255,0.06); }
+  .opt-letter {
+    font-family: var(--mono); font-size: 0.72rem; color: var(--muted); background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border); border-radius: 2px; min-width: 22px; height: 22px;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px;
+  }
+  .opt-btn.correct { border-color: var(--correct); background: rgba(0,255,153,0.08); }
+  .opt-btn.correct .opt-letter { background: var(--correct); color: var(--bg); border-color: var(--correct); font-weight: 700; }
+  .opt-btn.wrong { border-color: var(--wrong); background: rgba(255,61,110,0.08); }
+  .opt-btn.wrong .opt-letter { background: var(--wrong); color: white; border-color: var(--wrong); }
+  .opt-btn:disabled { cursor: default; }
+  .explanation {
+    margin-top: 16px; padding: 14px 16px; background: rgba(0,212,255,0.04);
+    border-left: 3px solid var(--accent); border-radius: 0 4px 4px 0;
+    font-size: 0.88rem; line-height: 1.65; color: var(--text); animation: fadeIn 0.3s ease;
+  }
+  .explanation strong {
+    color: var(--accent); font-family: var(--mono); font-size: 0.68rem;
+    letter-spacing: 0.1em; text-transform: uppercase; display: block; margin-bottom: 7px;
+  }
+  .next-btn {
+    width: 100%; padding: 13px; background: transparent; border: 1px solid var(--accent);
+    color: var(--accent); border-radius: 4px; font-family: var(--cond); font-size: 1rem;
+    font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer;
+    transition: all 0.15s; margin-top: 12px;
+  }
+  .next-btn:hover { background: rgba(0,212,255,0.08); }
+  .history-section { margin-top: 32px; }
+  .history-list { display: flex; flex-direction: column; gap: 6px; }
+  .history-item {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 4px;
+    padding: 10px 14px; display: flex; align-items: center; gap: 10px; font-size: 0.83rem;
+    animation: fadeIn 0.2s ease;
+  }
+  .history-icon { font-size: 0.9rem; flex-shrink: 0; }
+  .history-q { flex: 1; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .history-cat { font-family: var(--mono); font-size: 0.6rem; color: var(--muted); flex-shrink: 0; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  .q-src-badge {
+    font-family: var(--mono); font-size: 0.58rem; letter-spacing: 0.08em;
+    padding: 2px 7px; border-radius: 2px; text-transform: uppercase;
+  }
+  .q-src-badge.online  { color: var(--accent2); border: 1px solid rgba(0,255,153,0.25); background: rgba(0,255,153,0.06); }
+  .q-src-badge.local   { color: var(--muted);   border: 1px solid var(--border);        background: transparent; }
+
+  /* ─── Safari / cross-browser base fixes ──────────────────────────────────── */
+  html { -webkit-text-size-adjust: 100%; }
+  body { -webkit-font-smoothing: antialiased; }
+  button {
+    -webkit-appearance: none;
+    touch-action: manipulation;   /* removes 300 ms tap delay in Safari */
+  }
+
+  /* ─── Suppress sticky-hover on touch devices ─────────────────────────────── */
+  @media (hover: none) {
+    .cat-btn:hover               { border-color: var(--border); background: var(--panel); }
+    .opt-btn:not(:disabled):hover{ border-color: var(--border); background: rgba(255,255,255,0.02); }
+    .go-btn:hover:not(:disabled) { background: var(--accent); transform: none; }
+    .next-btn:hover              { background: transparent; }
+    .mode-btn:hover              { border-color: var(--border); color: var(--muted); }
+  }
+
+  /* ─── Mobile layout (≤ 600 px) ───────────────────────────────────────────── */
+  @media (max-width: 600px) {
+    .app { padding: 14px 14px 48px; }
+
+    /* Header */
+    .logo-block h1 { font-size: 1.85rem; }
+    header { margin-bottom: 20px; }
+
+    /* Stats strip — tighter chips, allow two rows */
+    .score-bar { gap: 6px; }
+    .stat-chip  { padding: 6px 10px; font-size: 0.63rem; }
+    .stat-chip span { font-size: 0.9rem; }
+
+    /* Category grid — 2 fixed columns on phones */
+    .cat-grid { grid-template-columns: repeat(2, 1fr); }
+
+    /* Mode buttons — taller tap target */
+    .mode-btn { padding: 10px 14px; font-size: 0.68rem; }
+
+    /* Question card */
+    .q-card    { padding: 16px 14px; }
+    .q-text    { font-size: 1rem; }
+    .opt-btn   { padding: 13px 14px; font-size: 0.9rem; }
+
+    /* History — let text wrap instead of overflowing */
+    .history-q { white-space: normal; }
+  }
+
+  /* ─── Extra-small phones (≤ 380 px) ─────────────────────────────────────── */
+  @media (max-width: 380px) {
+    .logo-block h1 { font-size: 1.5rem; }
+    .countdown .days { font-size: 1.6rem; }
+    .cat-grid { grid-template-columns: repeat(2, 1fr); gap: 6px; }
+    .mode-row { flex-direction: column; align-items: flex-start; }
+    .mode-btn { width: 100%; text-align: center; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="logo-block">
+      <h1>TSA Tech Bowl</h1>
+      <p>// STUDY TERMINAL — STATE COMPETITION PREP &nbsp;·&nbsp; v1.2.0</p>
+    </div>
+    <div class="countdown">
+      <div class="days" id="days-left">—</div>
+      <div class="label">days until<br>competition</div>
+    </div>
+  </header>
+
+  <div class="score-bar">
+    <div class="stat-chip">SESSION <span id="q-count">0</span></div>
+    <div class="stat-chip green">CORRECT <span id="correct-count">0</span></div>
+    <div class="stat-chip red">WRONG <span id="wrong-count">0</span></div>
+    <div class="stat-chip">STREAK <span id="streak-count">0</span> 🔥</div>
+    <div class="stat-chip">ACCURACY <span id="accuracy">—</span></div>
+  </div>
+
+  <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+
+  <div class="section-label">Select Topic Area</div>
+  <div class="cat-grid" id="cat-grid"></div>
+
+  <div class="src-row">
+    <span class="mode-label">SOURCES:</span>
+    <button class="src-btn active" id="src-opentdb" onclick="toggleSource('opentdb')">
+      <span class="src-dot" id="dot-opentdb">◌</span> OPEN TRIVIA DB
+    </button>
+    <button class="src-btn active" id="src-triviaapi" onclick="toggleSource('triviaapi')">
+      <span class="src-dot" id="dot-triviaapi">◌</span> THE TRIVIA API
+    </button>
+  </div>
+
+  <div class="mode-row">
+    <span class="mode-label">MODE:</span>
+    <button class="mode-btn active" id="mode-single" onclick="setMode('single')">SINGLE CATEGORY</button>
+    <button class="mode-btn" id="mode-all" onclick="setMode('all')">ALL CATEGORIES (MIXED)</button>
+  </div>
+
+  <button class="go-btn" id="go-btn" onclick="nextQuestion()">
+    <span>⚡</span> GENERATE QUESTION
+  </button>
+
+  <div id="question-area"></div>
+
+  <div class="history-section" id="history-section" style="display:none">
+    <div class="section-label">Recent Questions</div>
+    <div class="history-list" id="history-list"></div>
+  </div>
+</div>
+
+<script>
+// ─── Source definitions ───────────────────────────────────────────────────────
+// Each source has its own cache and category mapping.
+// ─── Source configurations ────────────────────────────────────────────────────
+const SOURCES = {
+  opentdb: {
+    label: 'OPEN TRIVIA DB',
+    cache: {},
+    // https://opentdb.com/api_category.php
+    catMap: {
+      computing:     18,  // Science: Computers
+      programming:   18,
+      math:          19,  // Science: Mathematics
+      history:       18,
+      electronics:   18,
+      engineering:   17,  // Science & Nature
+      biotech:       17,
+      aerospace:     17,
+      energy:        17,
+      materials:     17,
+      cybersecurity: 18,
+      robotics:      18,
+    },
+  },
+  triviaapi: {
+    label: 'THE TRIVIA API',
+    cache: {},
+    // https://the-trivia-api.com — "science" covers all STEM topics
+    catMap: {
+      computing:     'science',
+      programming:   'science',
+      math:          'science',
+      history:       'science',
+      electronics:   'science',
+      engineering:   'science',
+      biotech:       'science',
+      aerospace:     'science',
+      energy:        'science',
+      materials:     'science',
+      cybersecurity: 'science',
+      robotics:      'science',
+    },
+  },
+};
+
+// Which sources the user has enabled (all on by default)
+const enabledSources = { opentdb: true, triviaapi: true };
+
+let isFetching = false;
+
+// ─── HTML entity decoder (OpenTDB encodes &amp; &#039; etc.) ────────────────
+function htmlDecode(str) {
+  const ta = document.createElement('textarea');
+  ta.innerHTML = str;
+  return ta.value;
+}
+
+// ─── OpenTDB ──────────────────────────────────────────────────────────────────
+function convertOtdbQuestion(item) {
+  const raw = [item.correct_answer, ...item.incorrect_answers];
+  const opts = raw.map(htmlDecode);
+  const correctDecoded = htmlDecode(item.correct_answer);
+  for (let i = opts.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [opts[i], opts[j]] = [opts[j], opts[i]];
+  }
+  return {
+    q:      htmlDecode(item.question),
+    opts,
+    a:      opts.indexOf(correctDecoded),
+    exp:    `Open Trivia Database · ${item.category} · difficulty: ${item.difficulty}`,
+    source: 'opentdb',
+  };
+}
+
+async function fetchOtdbBatch(catId) {
+  const catNum = SOURCES.opentdb.catMap[catId] || 18;
+  const url = `https://opentdb.com/api.php?amount=15&type=multiple&category=${catNum}&difficulty=medium`;
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), 6000);
+  try {
+    const r = await fetch(url, { signal: ctrl.signal });
+    const d = await r.json();
+    if (d.response_code === 0 && Array.isArray(d.results)) return d.results.map(convertOtdbQuestion);
+  } catch (_) {} finally { clearTimeout(t); }
+  return [];
+}
+
+async function pickOtdbQuestion(catId) {
+  const cache = SOURCES.opentdb.cache;
+  if (!cache[catId] || !cache[catId].length) {
+    const batch = await fetchOtdbBatch(catId);
+    if (!batch.length) return null;
+    cache[catId] = batch;
+  }
+  return cache[catId].shift();
+}
+
+// ─── The Trivia API ───────────────────────────────────────────────────────────
+function convertTriviaApiQuestion(item) {
+  const correct = item.correctAnswer;
+  const opts = [correct, ...item.incorrectAnswers].sort(() => Math.random() - 0.5);
+  return {
+    q:      item.question.text,
+    opts,
+    a:      opts.indexOf(correct),
+    exp:    `The Trivia API · ${item.category} · difficulty: ${item.difficulty}`,
+    source: 'triviaapi',
+  };
+}
+
+async function fetchTriviaApiBatch(catId) {
+  const cat = SOURCES.triviaapi.catMap[catId] || 'science';
+  const url = `https://the-trivia-api.com/v2/questions?categories=${cat}&limit=15&difficulties=easy,medium&types=text_choice`;
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), 6000);
+  try {
+    const r = await fetch(url, { signal: ctrl.signal });
+    const d = await r.json();
+    if (Array.isArray(d) && d.length) return d.map(convertTriviaApiQuestion);
+  } catch (_) {} finally { clearTimeout(t); }
+  return [];
+}
+
+async function pickTriviaApiQuestion(catId) {
+  const cache = SOURCES.triviaapi.cache;
+  if (!cache[catId] || !cache[catId].length) {
+    const batch = await fetchTriviaApiBatch(catId);
+    if (!batch.length) return null;
+    cache[catId] = batch;
+  }
+  return cache[catId].shift();
+}
+
+// ─── Source selector UI helpers ───────────────────────────────────────────────
+function setSourceStatus(id, state) {
+  const dot = document.getElementById(`dot-${id}`);
+  if (!dot) return;
+  if (state === 'ok')       { dot.textContent = '●'; dot.style.color = 'var(--correct)'; }
+  else if (state === 'err') { dot.textContent = '●'; dot.style.color = 'var(--wrong)'; }
+  else                      { dot.textContent = '◌'; dot.style.color = 'var(--muted)'; }
+}
+
+function toggleSource(id) {
+  enabledSources[id] = !enabledSources[id];
+  document.getElementById(`src-${id}`)?.classList.toggle('active', enabledSources[id]);
+}
+
+async function checkSources() {
+  for (const id of Object.keys(SOURCES)) setSourceStatus(id, 'checking');
+
+  (async () => {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 6000);
+    try {
+      const r = await fetch('https://opentdb.com/api.php?amount=1&type=multiple&category=18', { signal: ctrl.signal });
+      const d = await r.json();
+      setSourceStatus('opentdb', d.response_code === 0 ? 'ok' : 'err');
+    } catch (_) { setSourceStatus('opentdb', 'err'); } finally { clearTimeout(t); }
+  })();
+
+  (async () => {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 6000);
+    try {
+      const r = await fetch('https://the-trivia-api.com/v2/questions?limit=1&categories=science', { signal: ctrl.signal });
+      const d = await r.json();
+      setSourceStatus('triviaapi', Array.isArray(d) && d.length ? 'ok' : 'err');
+    } catch (_) { setSourceStatus('triviaapi', 'err'); } finally { clearTimeout(t); }
+  })();
+}
+
+// ─── App state ────────────────────────────────────────────────────────────────
+const CATEGORIES = [
+  { id: 'computing',     name: 'Computing & IT',   icon: '💻' },
+  { id: 'programming',   name: 'Programming',       icon: '{ }' },
+  { id: 'engineering',   name: 'Engineering',       icon: '⚙️' },
+  { id: 'electronics',   name: 'Electronics',       icon: '⚡' },
+  { id: 'biotech',       name: 'Biotech & Med',     icon: '🧬' },
+  { id: 'aerospace',     name: 'Aerospace',         icon: '🚀' },
+  { id: 'math',          name: 'Applied Math',      icon: '∑' },
+  { id: 'energy',        name: 'Energy & Env.',     icon: '🌱' },
+  { id: 'materials',     name: 'Materials Sci.',    icon: '🔬' },
+  { id: 'cybersecurity', name: 'Cybersecurity',     icon: '🔐' },
+  { id: 'robotics',      name: 'Robotics & AI',     icon: '🤖' },
+  { id: 'history',       name: 'Tech History',      icon: '📡' },
+];
+
+let selectedCat = 'computing';
+let mode = 'single';
+let stats = { total: 0, correct: 0, wrong: 0, streak: 0 };
+let answered = false;
+let history = [];
+
+// Check all sources on load
+checkSources();
+
+// Countdown
+(function() {
+  const target = new Date('2026-04-23T09:00:00');
+  const diff = Math.ceil((target - new Date()) / 86400000);
+  document.getElementById('days-left').textContent = diff > 0 ? diff : '0';
+})();
+
+// Build category grid
+const grid = document.getElementById('cat-grid');
+CATEGORIES.forEach(cat => {
+  const btn = document.createElement('button');
+  btn.className = 'cat-btn' + (cat.id === selectedCat ? ' active' : '');
+  btn.dataset.id = cat.id;
+  btn.innerHTML = `<div class="cat-icon">${cat.icon}</div><div class="cat-name">${cat.name}</div>`;
+  btn.onclick = () => {
+    document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedCat = cat.id;
+  };
+  grid.appendChild(btn);
+});
+
+function setMode(m) {
+  mode = m;
+  document.getElementById('mode-single').classList.toggle('active', m === 'single');
+  document.getElementById('mode-all').classList.toggle('active', m === 'all');
+}
+
+// ─── Loading skeleton ─────────────────────────────────────────────────────────
+function showLoadingCard() {
+  document.getElementById('question-area').innerHTML = `
+    <div class="q-card" style="opacity:0.5">
+      <div class="q-meta"><span class="q-cat-tag">🌐 FETCHING QUESTION…</span></div>
+      <div class="q-text" style="color:var(--muted)">Pulling from online sources…</div>
+    </div>`;
+}
+
+// ─── Main question flow ───────────────────────────────────────────────────────
+async function nextQuestion() {
+  if (isFetching) return;
+
+  const active = Object.keys(enabledSources).filter(s => enabledSources[s]);
+  if (!active.length) {
+    document.getElementById('question-area').innerHTML = `
+      <div class="q-card">
+        <div class="q-text" style="color:var(--wrong)">⚠ No sources enabled. Enable at least one source above.</div>
+      </div>`;
+    return;
+  }
+
+  isFetching = true;
+  answered = false;
+
+  let catId = selectedCat;
+  if (mode === 'all') catId = CATEGORIES[Math.floor(Math.random() * CATEGORIES.length)].id;
+  const catObj = CATEGORIES.find(c => c.id === catId);
+
+  document.getElementById('go-btn').disabled = true;
+  showLoadingCard();
+
+  // Shuffle active sources so we don't always hit the same one first
+  const shuffled = [...active].sort(() => Math.random() - 0.5);
+  let q = null;
+  for (const src of shuffled) {
+    try {
+      if (src === 'opentdb')   q = await pickOtdbQuestion(catId);
+      if (src === 'triviaapi') q = await pickTriviaApiQuestion(catId);
+      if (q) break;
+    } catch (_) {}
+  }
+
+  isFetching = false;
+
+  if (!q) {
+    document.getElementById('question-area').innerHTML = `
+      <div class="q-card">
+        <div class="q-text" style="color:var(--wrong)">⚠ Could not load a question. Check your connection or try again.</div>
+      </div>`;
+    document.getElementById('go-btn').disabled = false;
+    return;
+  }
+
+  stats.total++;
+  updateStats();
+
+  const letters = ['A','B','C','D'];
+  const escExp = q.exp.replace(/\\/g,'\\\\').replace(/`/g,"'").replace(/"/g,'&quot;');
+
+  const srcLabel = q.source === 'opentdb' ? '🌐 OTDB' : '🌐 TRIVIA API';
+  const sourceBadge = `<span class="q-src-badge online">${srcLabel}</span>`;
+
+  const optHTML = q.opts.map((opt, i) => `
+    <button class="opt-btn" onclick="checkAnswer(this,${i},${q.a},\`${escExp}\`)" data-idx="${i}">
+      <span class="opt-letter">${letters[i]}</span><span>${opt}</span>
+    </button>`).join('');
+
+  document.getElementById('question-area').innerHTML = `
+    <div class="q-card">
+      <div class="q-meta">
+        <span class="q-cat-tag">${catObj.icon} ${catObj.name}</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          ${sourceBadge}
+          <span class="q-num">Question ${stats.total}</span>
+        </div>
+      </div>
+      <div class="q-text">${q.q}</div>
+      <div class="options">${optHTML}</div>
+      <div id="exp-area"></div>
+    </div>`;
+}
+
+
+function checkAnswer(btn, chosen, correct, exp) {
+  if (answered) return;
+  answered = true;
+  isFetching = false;   // allow next question to proceed
+  document.querySelectorAll('.opt-btn').forEach(b => {
+    b.disabled = true;
+    if (parseInt(b.dataset.idx) === correct) b.classList.add('correct');
+  });
+  const isRight = chosen === correct;
+  if (isRight) { stats.correct++; stats.streak++; }
+  else { btn.classList.add('wrong'); stats.wrong++; stats.streak = 0; }
+  updateStats();
+  const letters = ['A','B','C','D'];
+  document.getElementById('exp-area').innerHTML = `
+    <div class="explanation">
+      <strong>${isRight ? '✓ Correct!' : `✗ Incorrect — Answer: ${letters[correct]}`}</strong>${exp}
+    </div>
+    <button class="next-btn" onclick="nextQuestion()">Next Question →</button>`;
+  history.unshift({ icon: isRight ? '✅' : '❌', q: document.querySelector('.q-text').textContent, cat: document.querySelector('.q-cat-tag').textContent.trim() });
+  updateHistory();
+  document.getElementById('go-btn').disabled = false;
+}
+
+function updateStats() {
+  document.getElementById('q-count').textContent = stats.total;
+  document.getElementById('correct-count').textContent = stats.correct;
+  document.getElementById('wrong-count').textContent = stats.wrong;
+  document.getElementById('streak-count').textContent = stats.streak;
+  const acc = stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) + '%' : '—';
+  document.getElementById('accuracy').textContent = acc;
+  const pct = stats.total > 0 ? (stats.correct / stats.total) * 100 : 0;
+  document.getElementById('progress-fill').style.width = pct + '%';
+}
+
+function updateHistory() {
+  document.getElementById('history-section').style.display = 'block';
+  document.getElementById('history-list').innerHTML = history.slice(0, 7).map(h => `
+    <div class="history-item">
+      <span class="history-icon">${h.icon}</span>
+      <span class="history-q">${h.q}</span>
+      <span class="history-cat">${h.cat}</span>
+    </div>`).join('');
+}
+</script>
+</body>
+</html>
