@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- TSA Tech Bowl Study Tool v1.2.0 -->
+<!-- TSA Tech Bowl Study Tool v1.2.1 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TSA Tech Bowl — Study Tool v1.2.0</title>
+<title>TSA Tech Bowl — Study Tool v1.2.1</title>
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow:wght@300;400;600;700;900&family=Barlow+Condensed:wght@700;900&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -332,7 +332,7 @@
   <header>
     <div class="logo-block">
       <h1>TSA Tech Bowl</h1>
-      <p>// STUDY TERMINAL — STATE COMPETITION PREP &nbsp;·&nbsp; v1.2.0</p>
+      <p>// STUDY TERMINAL — STATE COMPETITION PREP &nbsp;·&nbsp; v1.2.1</p>
     </div>
     <div class="countdown">
       <div class="days" id="days-left">—</div>
@@ -390,17 +390,20 @@ const SOURCES = {
     label: 'OPEN TRIVIA DB',
     cache: {},
     // https://opentdb.com/api_category.php
+    // All TSA topics map to 18 (Science: Computers) — the only specifically
+    // tech-focused category.  Cat 17 (Science & Nature) returns biology/
+    // chemistry which is off-topic for this tool.
     catMap: {
-      computing:     18,  // Science: Computers
+      computing:     18,
       programming:   18,
-      math:          19,  // Science: Mathematics
+      math:          19,  // 19 = Science: Mathematics — stays on-topic
       history:       18,
       electronics:   18,
-      engineering:   17,  // Science & Nature
-      biotech:       17,
-      aerospace:     17,
-      energy:        17,
-      materials:     17,
+      engineering:   18,
+      biotech:       18,
+      aerospace:     18,
+      energy:        18,
+      materials:     18,
       cybersecurity: 18,
       robotics:      18,
     },
@@ -408,20 +411,21 @@ const SOURCES = {
   triviaapi: {
     label: 'THE TRIVIA API',
     cache: {},
-    // https://the-trivia-api.com — "science" covers all STEM topics
+    // https://the-trivia-api.com/v2/questions
+    // Each entry: { categories, tags } — tags narrow results to tech topics.
     catMap: {
-      computing:     'science',
-      programming:   'science',
-      math:          'science',
-      history:       'science',
-      electronics:   'science',
-      engineering:   'science',
-      biotech:       'science',
-      aerospace:     'science',
-      energy:        'science',
-      materials:     'science',
-      cybersecurity: 'science',
-      robotics:      'science',
+      computing:     { categories: 'science', tags: 'Technology,Computing' },
+      programming:   { categories: 'science', tags: 'Technology,Computing' },
+      math:          { categories: 'science', tags: 'Mathematics' },
+      history:       { categories: 'science', tags: 'Technology' },
+      electronics:   { categories: 'science', tags: 'Technology' },
+      engineering:   { categories: 'science', tags: 'Technology' },
+      biotech:       { categories: 'science', tags: 'Biology,Technology' },
+      aerospace:     { categories: 'science', tags: 'Space,Technology' },
+      energy:        { categories: 'science', tags: 'Technology' },
+      materials:     { categories: 'science', tags: 'Technology' },
+      cybersecurity: { categories: 'science', tags: 'Technology,Computing' },
+      robotics:      { categories: 'science', tags: 'Artificial Intelligence,Technology' },
     },
   },
 };
@@ -493,8 +497,8 @@ function convertTriviaApiQuestion(item) {
 }
 
 async function fetchTriviaApiBatch(catId) {
-  const cat = SOURCES.triviaapi.catMap[catId] || 'science';
-  const url = `https://the-trivia-api.com/v2/questions?categories=${cat}&limit=15&difficulties=easy,medium&types=text_choice`;
+  const cfg = SOURCES.triviaapi.catMap[catId] || { categories: 'science', tags: 'Technology' };
+  const url = `https://the-trivia-api.com/v2/questions?categories=${cfg.categories}&tags=${encodeURIComponent(cfg.tags)}&limit=15&difficulties=easy,medium&types=text_choice`;
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), 6000);
   try {
