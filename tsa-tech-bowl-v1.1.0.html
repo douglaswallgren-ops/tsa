@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<!-- TSA Tech Bowl Study Tool v1.1.0 -->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TSA Tech Bowl — Study Tool v1.1.0</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow:wght@300;400;600;700;900&family=Barlow+Condensed:wght@700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #050a0f;
+    --panel: #0a1520;
+    --border: #0e2a40;
+    --accent: #00d4ff;
+    --accent2: #00ff99;
+    --accent3: #ff6b35;
+    --text: #cce8f4;
+    --muted: #4a7a99;
+    --correct: #00ff99;
+    --wrong: #ff3d6e;
+    --mono: 'Share Tech Mono', monospace;
+    --sans: 'Barlow', sans-serif;
+    --cond: 'Barlow Condensed', sans-serif;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .app {
+    position: relative;
+    z-index: 1;
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 24px 20px 60px;
+  }
+  header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 32px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .logo-block h1 {
+    font-family: var(--cond);
+    font-size: 2.6rem;
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--accent);
+    text-shadow: 0 0 30px rgba(0,212,255,0.4);
+  }
+  .logo-block p {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: var(--muted);
+    letter-spacing: 0.12em;
+    margin-top: 4px;
+  }
+  .countdown { text-align: right; font-family: var(--mono); }
+  .countdown .days { font-size: 2rem; color: var(--accent3); font-weight: 700; }
+  .countdown .label { font-size: 0.65rem; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; }
+  .score-bar { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+  .stat-chip {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 8px 14px;
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .stat-chip span { color: var(--accent); font-size: 1rem; font-weight: 700; }
+  .stat-chip.green span { color: var(--correct); }
+  .stat-chip.red span { color: var(--wrong); }
+  .progress-bar { height: 3px; background: var(--border); border-radius: 2px; margin-bottom: 24px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 2px; transition: width 0.5s ease; width: 0%; }
+  .section-label {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+  .cat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+  .cat-btn {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 10px 14px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: left;
+  }
+  .cat-btn:hover { border-color: var(--accent); background: rgba(0,212,255,0.05); }
+  .cat-btn.active { border-color: var(--accent); background: rgba(0,212,255,0.1); box-shadow: 0 0 12px rgba(0,212,255,0.15); }
+  .cat-icon { font-size: 1.1rem; margin-bottom: 4px; }
+  .cat-name { font-family: var(--cond); font-size: 0.82rem; font-weight: 700; letter-spacing: 0.03em; color: var(--text); text-transform: uppercase; }
+  .cat-count { font-family: var(--mono); font-size: 0.58rem; color: var(--muted); margin-top: 2px; }
+  .cat-btn.active .cat-name { color: var(--accent); }
+
+  .mode-row { display: flex; gap: 8px; margin-bottom: 24px; align-items: center; flex-wrap: wrap; }
+  .mode-label { font-family: var(--mono); font-size: 0.65rem; color: var(--muted); letter-spacing: 0.1em; }
+  .mode-btn {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 6px 14px;
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .mode-btn:hover { border-color: var(--accent2); color: var(--accent2); }
+  .mode-btn.active { border-color: var(--accent2); color: var(--accent2); background: rgba(0,255,153,0.07); }
+
+  .go-btn {
+    width: 100%;
+    padding: 16px;
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    border-radius: 4px;
+    font-family: var(--cond);
+    font-size: 1.1rem;
+    font-weight: 900;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s;
+    margin-bottom: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+  .go-btn:hover:not(:disabled) { background: #33ddff; transform: translateY(-1px); }
+  .go-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .q-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 28px;
+    margin-bottom: 16px;
+    position: relative;
+    overflow: hidden;
+    animation: fadeIn 0.25s ease;
+  }
+  .q-card::before { content: ''; position: absolute; top: 0; left: 0; width: 3px; height: 100%; background: var(--accent); }
+  .q-meta { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; gap: 8px; flex-wrap: wrap; }
+  .q-cat-tag {
+    font-family: var(--mono); font-size: 0.63rem; letter-spacing: 0.1em; color: var(--accent);
+    text-transform: uppercase; background: rgba(0,212,255,0.08); border: 1px solid rgba(0,212,255,0.2);
+    padding: 3px 8px; border-radius: 2px;
+  }
+  .q-num { font-family: var(--mono); font-size: 0.68rem; color: var(--muted); }
+  .q-text { font-size: 1.12rem; font-weight: 400; line-height: 1.6; color: #e8f4ff; margin-bottom: 22px; }
+  .options { display: flex; flex-direction: column; gap: 8px; }
+  .opt-btn {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 12px 16px;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    font-size: 0.93rem;
+    color: var(--text);
+    font-family: var(--sans);
+    line-height: 1.45;
+    width: 100%;
+  }
+  .opt-btn:not(:disabled):hover { border-color: var(--accent); background: rgba(0,212,255,0.06); }
+  .opt-letter {
+    font-family: var(--mono); font-size: 0.72rem; color: var(--muted); background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border); border-radius: 2px; min-width: 22px; height: 22px;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px;
+  }
+  .opt-btn.correct { border-color: var(--correct); background: rgba(0,255,153,0.08); }
+  .opt-btn.correct .opt-letter { background: var(--correct); color: var(--bg); border-color: var(--correct); font-weight: 700; }
+  .opt-btn.wrong { border-color: var(--wrong); background: rgba(255,61,110,0.08); }
+  .opt-btn.wrong .opt-letter { background: var(--wrong); color: white; border-color: var(--wrong); }
+  .opt-btn:disabled { cursor: default; }
+  .explanation {
+    margin-top: 16px; padding: 14px 16px; background: rgba(0,212,255,0.04);
+    border-left: 3px solid var(--accent); border-radius: 0 4px 4px 0;
+    font-size: 0.88rem; line-height: 1.65; color: var(--text); animation: fadeIn 0.3s ease;
+  }
+  .explanation strong {
+    color: var(--accent); font-family: var(--mono); font-size: 0.68rem;
+    letter-spacing: 0.1em; text-transform: uppercase; display: block; margin-bottom: 7px;
+  }
+  .next-btn {
+    width: 100%; padding: 13px; background: transparent; border: 1px solid var(--accent);
+    color: var(--accent); border-radius: 4px; font-family: var(--cond); font-size: 1rem;
+    font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer;
+    transition: all 0.15s; margin-top: 12px;
+  }
+  .next-btn:hover { background: rgba(0,212,255,0.08); }
+  .history-section { margin-top: 32px; }
+  .history-list { display: flex; flex-direction: column; gap: 6px; }
+  .history-item {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 4px;
+    padding: 10px 14px; display: flex; align-items: center; gap: 10px; font-size: 0.83rem;
+    animation: fadeIn 0.2s ease;
+  }
+  .history-icon { font-size: 0.9rem; flex-shrink: 0; }
+  .history-q { flex: 1; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .history-cat { font-family: var(--mono); font-size: 0.6rem; color: var(--muted); flex-shrink: 0; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  .q-src-badge {
+    font-family: var(--mono); font-size: 0.58rem; letter-spacing: 0.08em;
+    padding: 2px 7px; border-radius: 2px; text-transform: uppercase;
+  }
+  .q-src-badge.online  { color: var(--accent2); border: 1px solid rgba(0,255,153,0.25); background: rgba(0,255,153,0.06); }
+  .q-src-badge.local   { color: var(--muted);   border: 1px solid var(--border);        background: transparent; }
+
+  /* ─── Safari / cross-browser base fixes ──────────────────────────────────── */
+  html { -webkit-text-size-adjust: 100%; }
+  body { -webkit-font-smoothing: antialiased; }
+  button {
+    -webkit-appearance: none;
+    touch-action: manipulation;   /* removes 300 ms tap delay in Safari */
+  }
+
+  /* ─── Suppress sticky-hover on touch devices ─────────────────────────────── */
+  @media (hover: none) {
+    .cat-btn:hover               { border-color: var(--border); background: var(--panel); }
+    .opt-btn:not(:disabled):hover{ border-color: var(--border); background: rgba(255,255,255,0.02); }
+    .go-btn:hover:not(:disabled) { background: var(--accent); transform: none; }
+    .next-btn:hover              { background: transparent; }
+    .mode-btn:hover              { border-color: var(--border); color: var(--muted); }
+  }
+
+  /* ─── Mobile layout (≤ 600 px) ───────────────────────────────────────────── */
+  @media (max-width: 600px) {
+    .app { padding: 14px 14px 48px; }
+
+    /* Header */
+    .logo-block h1 { font-size: 1.85rem; }
+    header { margin-bottom: 20px; }
+
+    /* Stats strip — tighter chips, allow two rows */
+    .score-bar { gap: 6px; }
+    .stat-chip  { padding: 6px 10px; font-size: 0.63rem; }
+    .stat-chip span { font-size: 0.9rem; }
+
+    /* Category grid — 2 fixed columns on phones */
+    .cat-grid { grid-template-columns: repeat(2, 1fr); }
+
+    /* Mode buttons — taller tap target */
+    .mode-btn { padding: 10px 14px; font-size: 0.68rem; }
+
+    /* Question card */
+    .q-card    { padding: 16px 14px; }
+    .q-text    { font-size: 1rem; }
+    .opt-btn   { padding: 13px 14px; font-size: 0.9rem; }
+
+    /* History — let text wrap instead of overflowing */
+    .history-q { white-space: normal; }
+  }
+
+  /* ─── Extra-small phones (≤ 380 px) ─────────────────────────────────────── */
+  @media (max-width: 380px) {
+    .logo-block h1 { font-size: 1.5rem; }
+    .countdown .days { font-size: 1.6rem; }
+    .cat-grid { grid-template-columns: repeat(2, 1fr); gap: 6px; }
+    .mode-row { flex-direction: column; align-items: flex-start; }
+    .mode-btn { width: 100%; text-align: center; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="logo-block">
+      <h1>TSA Tech Bowl</h1>
+      <p>// STUDY TERMINAL — STATE COMPETITION PREP &nbsp;·&nbsp; v1.1.0</p>
+    </div>
+    <div class="countdown">
+      <div class="days" id="days-left">—</div>
+      <div class="label">days until<br>competition</div>
+    </div>
+  </header>
+
+  <div class="score-bar">
+    <div class="stat-chip">SESSION <span id="q-count">0</span></div>
+    <div class="stat-chip green">CORRECT <span id="correct-count">0</span></div>
+    <div class="stat-chip red">WRONG <span id="wrong-count">0</span></div>
+    <div class="stat-chip">STREAK <span id="streak-count">0</span> 🔥</div>
+    <div class="stat-chip">ACCURACY <span id="accuracy">—</span></div>
+    <div class="stat-chip" id="source-chip" title="Checking connectivity...">SOURCE <span id="source-status" style="color:var(--muted)">···</span></div>
+  </div>
+
+  <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+
+  <div class="section-label">Select Topic Area</div>
+  <div class="cat-grid" id="cat-grid"></div>
+
+  <div class="mode-row">
+    <span class="mode-label">MODE:</span>
+    <button class="mode-btn active" id="mode-single" onclick="setMode('single')">SINGLE CATEGORY</button>
+    <button class="mode-btn" id="mode-all" onclick="setMode('all')">ALL CATEGORIES (MIXED)</button>
+  </div>
+
+  <button class="go-btn" id="go-btn" onclick="nextQuestion()">
+    <span>⚡</span> GENERATE QUESTION
+  </button>
+
+  <div id="question-area"></div>
+
+  <div class="history-section" id="history-section" style="display:none">
+    <div class="section-label">Recent Questions</div>
+    <div class="history-list" id="history-list"></div>
+  </div>
+</div>
+
+<script>
+// ─── Online source: Open Trivia Database ────────────────────────────────────
+// Maps each local category to the closest OpenTDB category ID.
+// https://opentdb.com/api_category.php
+const ONLINE_CAT_MAP = {
+  computing:     18,  // Science: Computers
+  programming:   18,
+  math:          19,  // Science: Mathematics
+  history:       18,  // Science: Computers (closest for tech history)
+  electronics:   18,
+  engineering:   17,  // Science & Nature
+  biotech:       17,
+  aerospace:     17,
+  energy:        17,
+  materials:     17,
+  cybersecurity: 18,
+  robotics:      18,
+};
+
+// ─── State ────────────────────────────────────────────────────────────────────
+let isOnline     = false;   // true once connectivity confirmed
+let isFetching   = false;   // guard against double-clicks during async load
+let onlineCache  = {};      // catId → [{q,opts,a,exp,source:'online'}, ...]
+let connectivityCheckTimer = null;
+
+// ─── HTML entity decoder (OpenTDB encodes &amp; &#039; etc.) ────────────────
+function htmlDecode(str) {
+  const ta = document.createElement('textarea');
+  ta.innerHTML = str;
+  return ta.value;
+}
+
+// ─── Convert one OpenTDB result object to our internal format ────────────────
+function convertOtdbQuestion(item) {
+  // Build [correct, wrong1, wrong2, wrong3] then shuffle
+  const raw = [item.correct_answer, ...item.incorrect_answers];
+  const opts = raw.map(htmlDecode);
+  const correctDecoded = htmlDecode(item.correct_answer);
+  // Fisher-Yates shuffle
+  for (let i = opts.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [opts[i], opts[j]] = [opts[j], opts[i]];
+  }
+  return {
+    q:      htmlDecode(item.question),
+    opts,
+    a:      opts.indexOf(correctDecoded),
+    exp:    `Open Trivia Database · ${item.category} · difficulty: ${item.difficulty}`,
+    source: 'online',
+  };
+}
+
+// ─── Fetch a batch of questions from OpenTDB for a given category ─────────────
+async function fetchOnlineQuestions(catId) {
+  const otdbCat = ONLINE_CAT_MAP[catId] || 18;
+  const url = `https://opentdb.com/api.php?amount=15&type=multiple&category=${otdbCat}&difficulty=medium`;
+  const controller = new AbortController();
+  const timeout    = setTimeout(() => controller.abort(), 6000);
+  try {
+    const resp = await fetch(url, { signal: controller.signal });
+    const data = await resp.json();
+    if (data.response_code === 0 && Array.isArray(data.results)) {
+      return data.results.map(convertOtdbQuestion);
+    }
+  } catch (_) {
+    /* network error or timeout — caller handles null return */
+  } finally {
+    clearTimeout(timeout);
+  }
+  return [];
+}
+
+// ─── Pull one question from the online cache (fetch more if empty) ───────────
+async function pickOnlineQuestion(catId) {
+  if (!onlineCache[catId] || onlineCache[catId].length === 0) {
+    const batch = await fetchOnlineQuestions(catId);
+    if (!batch.length) return null;          // couldn't reach API
+    onlineCache[catId] = batch;
+  }
+  return onlineCache[catId].shift();
+}
+
+// ─── Check connectivity and update the SOURCE chip ───────────────────────────
+async function checkConnectivity() {
+  updateSourceChip('checking');
+  const controller = new AbortController();
+  const timeout    = setTimeout(() => controller.abort(), 5000);
+  try {
+    const resp = await fetch(
+      'https://opentdb.com/api.php?amount=1&type=multiple&category=18',
+      { signal: controller.signal }
+    );
+    const data = await resp.json();
+    isOnline = (data.response_code === 0);
+  } catch (_) {
+    isOnline = false;
+  } finally {
+    clearTimeout(timeout);
+  }
+  updateSourceChip(isOnline ? 'online' : 'offline');
+  // Re-check every 60 s so the tool adapts if connection drops or recovers
+  clearTimeout(connectivityCheckTimer);
+  connectivityCheckTimer = setTimeout(checkConnectivity, 60000);
+}
+
+function updateSourceChip(state) {
+  const span = document.getElementById('source-status');
+  const chip = document.getElementById('source-chip');
+  if (state === 'online') {
+    span.textContent = '🌐 LIVE';
+    span.style.color = 'var(--accent2)';
+    chip.title = 'Online: pulling fresh questions from Open Trivia Database + local bank';
+  } else if (state === 'offline') {
+    span.textContent = '📴 LOCAL';
+    span.style.color = 'var(--muted)';
+    chip.title = 'Offline: using built-in question bank only';
+  } else {
+    span.textContent = '···';
+    span.style.color = 'var(--muted)';
+    chip.title = 'Checking connectivity…';
+  }
+}
+
+// ─── Local question bank ─────────────────────────────────────────────────────
+// Questions calibrated for 10th-grade level; contemporary sources & examples.
+const QUESTION_BANK = {
+  computing: [
+    { q: "What does 'CPU' stand for?", opts: ["Central Processing Unit","Computer Power Unit","Core Programming Utility","Central Program Uploader"], a: 0, exp: "CPU (Central Processing Unit) is the brain of a computer — it carries out instructions from programs. Every phone, laptop, and smart device has one. Modern CPUs (like Apple's M4 or Intel's Core Ultra) contain billions of transistors." },
+    { q: "What is the main job of an operating system?", opts: ["Browse the internet","Manage the computer's hardware and software so apps can run","Store your photos and videos","Play video games"], a: 1, exp: "An operating system (Windows, macOS, Android, iOS) manages hardware resources and provides a foundation for apps to run. Without it, software wouldn't know how to use the screen, storage, or network." },
+    { q: "What does Wi-Fi allow devices to do?", opts: ["Print documents wirelessly","Connect to a network without physical cables using radio waves","Charge wirelessly","Share screens between devices"], a: 1, exp: "Wi-Fi uses radio waves to connect devices to a network without cables. It's based on the 802.11 standard. Wi-Fi 7 (2024) can deliver multi-gigabit speeds — fast enough to stream 8K video on dozens of devices at once." },
+    { q: "How much storage does 1 gigabyte (GB) equal?", opts: ["1,000 bytes","1,000 kilobytes","1,024 megabytes","1,000 terabytes"], a: 2, exp: "1 GB = 1,024 MB. A typical song is about 4 MB, so 1 GB holds roughly 250 songs. A 4K movie is around 15-50 GB. Most modern smartphones ship with 128–512 GB of internal storage." },
+    { q: "What is cloud storage?", opts: ["A USB drive shaped like a cloud","Storing files on remote servers you access over the internet","Temporary memory inside the CPU","Backup using DVDs"], a: 1, exp: "Cloud storage (Google Drive, iCloud, OneDrive, Dropbox) lets you save files on remote servers and access them from any device with internet. Your photos sync automatically so they're safe even if your phone breaks." },
+    { q: "What does 'URL' stand for?", opts: ["Uniform Resource Locator","Unified Remote Link","Universal Router Language","Uplink Resource Library"], a: 0, exp: "URL (Uniform Resource Locator) is the web address in your browser bar — like 'https://google.com'. Every web page has a unique URL. URL components include the protocol (https://), domain (google.com), and path (/search)." },
+    { q: "What is the main difference between hardware and software?", opts: ["Hardware is newer","Hardware is physical components; software is programs and instructions","Software costs more than hardware","There's no real difference"], a: 1, exp: "Hardware is anything physical — keyboard, screen, CPU, RAM. Software is programs and instructions — Windows, Chrome, TikTok. You need both: hardware runs software, and software controls hardware." },
+    { q: "What does RAM do in a computer?", opts: ["Permanently stores all files","Temporarily holds data the computer is actively using for fast access","Powers the graphics card","Connects to the internet"], a: 1, exp: "RAM (Random Access Memory) is fast, temporary working memory. When you open an app, it loads into RAM for quick access. More RAM means more apps can run at once without slowing down. RAM is cleared when you shut down." },
+    { q: "What is a pixel?", opts: ["A type of computer virus","The smallest unit of a digital image or display","A measure of internet speed","A programming language"], a: 1, exp: "A pixel (picture element) is the tiniest dot of color on a screen or in an image. A 1080p monitor has 1,920 × 1,080 pixels; a 4K display has four times as many. More pixels = sharper, more detailed image." },
+    { q: "What does 'downloading' mean?", opts: ["Deleting a file","Transferring a file from the internet to your device","Moving a file to the cloud","Compressing a file"], a: 1, exp: "Downloading copies data from a remote server to your device. Uploading sends data from your device to the internet. Download speeds (like 500 Mbps) determine how quickly you can stream, game, or grab large files." },
+    { q: "What is Bluetooth used for?", opts: ["Connecting to Wi-Fi","Short-range wireless communication between nearby devices","Storing data on a hard drive","Blocking ads"], a: 1, exp: "Bluetooth uses radio waves for short-range connections — pairing AirPods to a phone, connecting a game controller to a console, or sharing files. Bluetooth 5.4 (2023) supports ranges over 100 meters at low power." },
+    { q: "What does an IP address do?", opts: ["Identifies a software license","Uniquely identifies a device on a network","Measures processor speed","Labels a file type"], a: 1, exp: "An IP address is a unique number assigned to each device on a network — like a postal address for your device. IPv4 addresses look like 192.168.1.1. IPv6 (128-bit) was introduced because we're running out of IPv4 addresses." },
+  ],
+  programming: [
+    { q: "What is a variable in programming?", opts: ["A type of error","A named storage location that holds a value","A loop that repeats forever","A type of function"], a: 1, exp: "A variable is a named container for data. In Python: score = 95 stores 95 in a variable named 'score'. Variables can hold numbers, text, lists, and more. Naming variables clearly makes code much easier to read and debug." },
+    { q: "What does a loop do in programming?", opts: ["Stops a program","Connects to the internet","Repeats a block of code multiple times","Displays text on screen"], a: 2, exp: "Loops repeat code automatically. A 'for' loop runs a set number of times; a 'while' loop runs as long as a condition is true. Without loops, printing 1,000 names would require 1,000 lines of code — a loop does it in 3." },
+    { q: "What does an 'if statement' do in programming?", opts: ["Adds a comment to code","Runs a block of code only if a condition is true","Defines a function","Creates a variable"], a: 1, exp: "An if statement checks a condition and runs code only if it's true. Example: if score >= 90: print('A'). This is how programs make decisions — checking login, validating forms, showing different content to different users." },
+    { q: "What is a function in programming?", opts: ["An error in the code","A reusable block of code that performs a specific task","A type of loop","A database query"], a: 1, exp: "A function is a named block of code you can call anytime. Instead of rewriting the same 10 lines, define it once as a function and call it by name. Functions keep code organized, readable, and DRY (Don't Repeat Yourself)." },
+    { q: "What is a 'bug' in programming?", opts: ["A speed optimization","An error causing unexpected behavior","A security password","A type of loop"], a: 1, exp: "A bug is an error that makes a program behave incorrectly. The term originates from 1947 when a literal moth found in a relay caused a malfunction at Harvard. Debugging means finding and fixing bugs — a major part of every developer's work." },
+    { q: "What does print() do in Python?", opts: ["Sends a file to a printer","Displays output to the screen","Saves a file","Imports a library"], a: 1, exp: "print() displays text or values to the screen. print('Hello!') outputs: Hello! — It's usually the very first command beginners learn. Developers also use print() to debug code by checking what values variables hold mid-run." },
+    { q: "What is an algorithm?", opts: ["A type of programming language","A step-by-step set of instructions for solving a problem","A computer processor","A database"], a: 1, exp: "An algorithm is a precise, step-by-step procedure for solving a problem. A recipe, GPS directions, and a sorting procedure are all algorithms. Writing code is essentially writing algorithms in a language computers can execute." },
+    { q: "What does HTML create?", opts: ["Computer programs and apps","The structure and content of web pages","Database queries","Video game graphics"], a: 1, exp: "HTML (HyperText Markup Language) defines web page structure using tags: <h1> for headings, <p> for paragraphs, <img> for images, <a> for links. Every website you visit is built on HTML, usually combined with CSS (style) and JavaScript (behavior)." },
+    { q: "What is the difference between '=' and '==' in most programming languages?", opts: ["They do the same thing","'=' assigns a value; '==' checks if two values are equal","'==' assigns; '=' compares","'==' only works with numbers"], a: 1, exp: "'=' is assignment: x = 5 stores 5 in x. '==' is comparison: x == 5 evaluates to True or False. Mixing them up is one of the most common beginner bugs — if (x = 5) always evaluates as true in some languages regardless of x's value." },
+    { q: "What does it mean to 'compile' code?", opts: ["Delete the code","Share code online","Translate source code into machine code a computer can execute","Backup code to the cloud"], a: 2, exp: "Compiling translates human-readable source code (C++, Java) into machine code (binary 0s and 1s) CPUs execute directly. Python uses an interpreter instead — running code line-by-line. Compiled code is usually faster; interpreted code is more flexible." },
+    { q: "What is 'open source' software?", opts: ["Software that is always free","Software whose source code is publicly available for anyone to view, modify, and share","Software made only by large companies","Software guaranteed to have no bugs"], a: 1, exp: "Open source software has its source code publicly shared. Examples: Linux (powers Android and most servers), Python, Firefox, VS Code, Android. It powers much of the internet and lets developers worldwide contribute improvements." },
+    { q: "What is a 'comment' in code?", opts: ["An error message","Text in code the computer ignores, used to explain the code to humans","A type of loop","A printing function"], a: 1, exp: "Comments are notes written inside code for humans to read — the computer completely ignores them. In Python, # starts a comment. Good comments explain *why* the code does something, helping teammates and future-you understand it." },
+  ],
+  engineering: [
+    { q: "What is a prototype in engineering?", opts: ["The final production model","An early test model used to try out and improve a design before full manufacturing","A type of computer simulation","A mathematical equation"], a: 1, exp: "A prototype is a working early model used to test ideas and catch problems before committing to mass production. Fixing a design flaw in a prototype is far cheaper than recalling thousands of finished products." },
+    { q: "What does 'CAD' stand for in engineering?", opts: ["Computer-Aided Design","Combined Assembly Drawing","Calculated Automatic Draft","Core Application Design"], a: 0, exp: "CAD (Computer-Aided Design) software — like AutoCAD, SolidWorks, and Fusion 360 — lets engineers create precise 2D and 3D designs digitally. CAD replaced paper drafting and enables files to feed directly into 3D printers or CNC machines." },
+    { q: "What is the first step in the engineering design process?", opts: ["Build a prototype","Test the design","Identify and define the problem","Present the final product"], a: 2, exp: "Engineers start by clearly defining the problem. Without understanding exactly what problem you're solving, who has it, and what constraints exist (cost, size, safety), you can't design a good solution." },
+    { q: "What does 3D printing create?", opts: ["2D drawings on paper","Physical three-dimensional objects built layer by layer from a digital design","Holographic images","Computer simulations"], a: 1, exp: "3D printing (additive manufacturing) builds physical objects by depositing material layer by layer — plastic, resin, or even metal — guided by a digital 3D model. It's used for prototyping, custom parts, prosthetics, and aerospace components." },
+    { q: "What does Newton's Third Law of Motion state?", opts: ["Objects at rest stay at rest","Force equals mass times acceleration","For every action there is an equal and opposite reaction","Energy cannot be created or destroyed"], a: 2, exp: "Newton's Third Law: when object A exerts a force on object B, B exerts an equal but opposite force back on A. Rockets work by this law — pushing exhaust gases downward causes an equal upward force on the rocket." },
+    { q: "What does 'ergonomics' study?", opts: ["Energy efficiency of machines","Designing products and workspaces to fit the human body for comfort, safety, and efficiency","The strength of materials","Aerodynamics of vehicles"], a: 1, exp: "Ergonomics (human factors) designs tools, chairs, keyboards, and workspaces to minimize fatigue and injury. A well-designed chair supports your back; a well-designed keyboard reduces wrist strain. Poor ergonomics causes long-term injuries." },
+    { q: "What is a 'system' in engineering?", opts: ["A computer program","A set of interacting components that work together to achieve a function","A type of bridge design","A mathematical equation"], a: 1, exp: "A system is a group of components that interact to achieve a goal. A car is a system: engine, transmission, brakes, and steering all work together. Systems thinking helps engineers design, test, and troubleshoot complex products." },
+    { q: "What does 'force' measure in physics and engineering?", opts: ["The speed of an object","A push or pull on an object, measured in Newtons","The weight of a material","Temperature of a substance"], a: 1, exp: "Force is a push or pull that can change an object's motion. Measured in Newtons (N). F = ma (Newton's Second Law): Force = mass × acceleration. Engineers calculate forces to make sure structures and machines don't fail under load." },
+  ],
+  electronics: [
+    { q: "What does LED stand for?", opts: ["Laser Emission Device","Light Emitting Diode","Low Energy Display","Linear Electronic Driver"], a: 1, exp: "LED (Light Emitting Diode) is a semiconductor that produces light when current flows through it. LEDs are very energy-efficient and last far longer than traditional bulbs. They're in phone screens, TVs, traffic lights, and flashlights." },
+    { q: "What is an electric circuit?", opts: ["A type of computer chip","A closed path through which electric current flows","A wireless signal","A battery measurement"], a: 1, exp: "A circuit is a complete, closed loop for electrons to flow through. Open the loop (like flipping a switch off) and current stops. A basic circuit needs a power source (battery), a conductor (wire), and a load (like a light bulb)." },
+    { q: "What does a battery do?", opts: ["Increases voltage in a circuit","Converts stored chemical energy into electrical energy","Measures current in a circuit","Blocks electricity"], a: 1, exp: "A battery converts stored chemical energy into electrical energy through reactions at its electrodes. Voltage (like 1.5 V or 9 V) is the battery's 'pressure.' Capacity (measured in mAh) determines how long it lasts." },
+    { q: "What unit measures electric current?", opts: ["Volts","Watts","Ohms","Amperes (Amps)"], a: 3, exp: "Current is measured in Amperes (Amps, A) — it measures how much electric charge flows per second. Voltage (V) is the 'push'; current (A) is the 'flow'; resistance (Ω) opposes flow. These three are linked by Ohm's Law: V = IR." },
+    { q: "Using Ohm's Law (V = IR), if voltage is 12 V and resistance is 4 Ω, what is the current?", opts: ["48 A","8 A","3 A","0.33 A"], a: 2, exp: "I = V ÷ R = 12 V ÷ 4 Ω = 3 Amperes. Ohm's Law (V = IR) is the most important formula in basic electronics, linking voltage, current, and resistance. Rearranged: I = V/R (current) or R = V/I (resistance)." },
+    { q: "What does an Arduino board allow you to do?", opts: ["Build websites","Create social media apps","Program a microcontroller to interact with lights, motors, and sensors","Design computer games"], a: 2, exp: "Arduino is an open-source electronics platform with easy-to-use hardware and free software. You program it to blink LEDs, read sensors, control motors, and build robots. It's one of the most popular tools for learning electronics and engineering." },
+    { q: "What is a sensor in electronics?", opts: ["A device that provides power","A device that detects changes in the environment and converts them to electrical signals","A type of display screen","A wireless chip"], a: 1, exp: "Sensors convert physical phenomena into electrical signals: thermistors (temperature), photoresistors (light), PIR sensors (motion), accelerometers (movement). Sensors are how electronic devices perceive the real world." },
+    { q: "What is the output of an AND gate when both inputs are 1?", opts: ["0","1","Depends on voltage","2"], a: 1, exp: "An AND gate outputs 1 ONLY when ALL inputs are 1. Both inputs must be 1 → output is 1. If either input is 0, output is 0. Logic gates like AND, OR, and NOT are the fundamental building blocks of all digital computers." },
+    { q: "What does a microcontroller do?", opts: ["It's a miniature remote control","A small, complete computer on a single chip that controls electronic devices","A type of battery","A wireless transmitter"], a: 1, exp: "A microcontroller contains a CPU, memory, and input/output all on one chip. They control everyday devices: microwaves, cars, washing machines, toys, and robots. Arduino and Raspberry Pi Pico are popular learning microcontrollers." },
+  ],
+  biotech: [
+    { q: "What does DNA stand for?", opts: ["Dynamic Nuclear Acid","Deoxyribonucleic Acid","Double Nucleotide Assembly","Direct Nucleic Acid"], a: 1, exp: "DNA (Deoxyribonucleic Acid) is the molecule that carries genetic instructions for all living things. It's shaped like a double helix and packed inside the nucleus of nearly every cell in your body. Human DNA contains about 3 billion base pairs." },
+    { q: "What is a gene?", opts: ["A type of cell","A segment of DNA that provides instructions for making a specific protein or controlling a trait","A type of hormone","The entire DNA molecule"], a: 1, exp: "A gene is a specific sequence of DNA that codes for a protein or has another biological function. Humans have around 20,000–25,000 genes that influence traits like eye color, height, blood type, and disease risk." },
+    { q: "What does 'GMO' stand for?", opts: ["Genetically Modified Organism","Growth Management Order","General Molecular Operations","Guided Metabolic Output"], a: 0, exp: "GMO (Genetically Modified Organism) has had specific genes added, removed, or altered using genetic engineering. GMO crops may resist pests or drought. GMO bacteria are used to produce insulin, saving millions of diabetic lives every year." },
+    { q: "What does a vaccine do?", opts: ["Kill all bacteria in the body","Train the immune system to recognize and fight a specific pathogen without causing the disease","Replace antibiotics","Prevent every disease permanently"], a: 1, exp: "Vaccines expose your immune system to a harmless piece of a pathogen — a dead virus, protein fragment, or mRNA instructions — so it learns to recognize it. If you later encounter the real pathogen, your immune system fights it off quickly." },
+    { q: "What is the correct order of the central dogma of molecular biology?", opts: ["Protein → RNA → DNA","RNA → DNA → Protein","DNA → RNA → Protein","DNA → Protein → RNA"], a: 2, exp: "The central dogma: DNA is transcribed into mRNA (in the nucleus), which is translated into protein (at ribosomes). COVID-19 mRNA vaccines (Pfizer/Moderna) work by delivering mRNA that instructs cells to make the spike protein, training immunity." },
+    { q: "What are the building blocks of proteins?", opts: ["Nucleotides","Amino acids","Lipids","Glucose molecules"], a: 1, exp: "Proteins are chains of amino acids. There are 20 standard amino acids, and their specific sequence determines a protein's shape and function. Proteins carry oxygen in blood (hemoglobin), fight infections (antibodies), and speed up reactions (enzymes)." },
+    { q: "What makes stem cells special?", opts: ["They are the largest cells in the body","They can self-renew and develop into many different specialized cell types","They only exist in the brain","They never divide"], a: 1, exp: "Stem cells have two key abilities: self-renewal (dividing to create more stem cells) and differentiation (becoming specialized cells like muscle, nerve, or blood cells). Scientists are researching them for treating diseases like Parkinson's and type 1 diabetes." },
+  ],
+  aerospace: [
+    { q: "What are the four forces acting on an aircraft in flight?", opts: ["Push, Pull, Rise, Fall","Lift, Weight, Thrust, Drag","Speed, Gravity, Power, Friction","Pressure, Wind, Power, Mass"], a: 1, exp: "Lift (upward, from wings) opposes Weight/Gravity (downward). Thrust (forward, from engines) opposes Drag (backward, from air resistance). In straight-and-level flight at constant speed: Lift = Weight and Thrust = Drag." },
+    { q: "What does NASA stand for?", opts: ["National Aerospace and Science Agency","North American Space Association","National Aeronautics and Space Administration","National Air and Space Authority"], a: 2, exp: "NASA (National Aeronautics and Space Administration) is the US government's civilian space and aeronautics agency, founded in 1958. Major accomplishments include the Apollo Moon landings, Hubble Space Telescope, Mars rovers, and the Artemis program." },
+    { q: "What orbit does the International Space Station travel in?", opts: ["Geostationary orbit at 35,786 km","Low Earth Orbit (LEO) at about 400 km altitude","The Moon's orbit","Medium Earth Orbit at 20,000 km"], a: 1, exp: "The ISS orbits in Low Earth Orbit (LEO) about 400 km up, completing one orbit every 90 minutes at roughly 28,000 km/h. It has been continuously occupied since November 2000 and is a partnership of NASA, ESA, JAXA, and other agencies." },
+    { q: "What company successfully landed and reused an orbital rocket booster for the first time?", opts: ["Boeing","NASA","Blue Origin","SpaceX"], a: 3, exp: "SpaceX first landed and reused a Falcon 9 orbital booster in 2015–2017, revolutionizing spaceflight economics. Previously, every rocket was discarded after one flight. Reusable rockets have cut launch costs dramatically, enabling Starlink and commercial crew missions." },
+    { q: "What challenge must a rocket overcome to place a satellite in orbit?", opts: ["Flying above clouds","Reaching enough horizontal speed (~28,000 km/h) so it 'falls around' Earth rather than back down","Avoiding other satellites","Finding the right compass direction"], a: 1, exp: "Orbit isn't just about altitude — it's about speed. A satellite must reach about 7.9 km/s (28,000 km/h) horizontally so gravity curves it around Earth rather than straight back down. This is why rockets need so much fuel." },
+    { q: "Where is the Kármán line, the official boundary of space?", opts: ["12 km — where the troposphere ends","100 km altitude above Earth's surface","Where gravity equals zero","The point where satellites can no longer orbit"], a: 1, exp: "The Kármán line at 100 km (about 62 miles) is the internationally recognized edge of space. Below it, wings and aerodynamics work; above it, the atmosphere is too thin. SpaceX, Blue Origin, and Virgin Galactic all cross this line on space missions." },
+  ],
+  math: [
+    { q: "What is the Pythagorean theorem?", opts: ["a + b = c","a² + b² = c²","a × b = c²","2a + 2b = c"], a: 1, exp: "In a right triangle, the square of the hypotenuse (longest side, c) equals the sum of the squares of the two legs. The classic example: 3² + 4² = 9 + 16 = 25 = 5². Used constantly in engineering, navigation, and game programming." },
+    { q: "What is the mean (average) of 10, 20, 30, and 40?", opts: ["20","25","30","35"], a: 1, exp: "Mean = sum ÷ count = (10 + 20 + 30 + 40) ÷ 4 = 100 ÷ 4 = 25. The mean is the most common measure of center in statistics. Other measures include median (middle value when sorted) and mode (most frequent value)." },
+    { q: "What is 25% of 200?", opts: ["25","40","50","75"], a: 2, exp: "25% of 200 = 0.25 × 200 = 50. Or think of it as a fraction: 25% = 1/4, and 200 ÷ 4 = 50. Percentages appear everywhere — sales tax, test scores, battery level, data usage, and statistics." },
+    { q: "If f(x) = 3x − 2, what is f(4)?", opts: ["10","12","14","6"], a: 0, exp: "f(4) = 3(4) − 2 = 12 − 2 = 10. Functions take an input, apply operations, and return an output. Function notation is fundamental to algebra, calculus, and every programming language — functions in code work the same way." },
+    { q: "What is a prime number?", opts: ["Any number divisible by 2","A number greater than 100","A whole number greater than 1 with exactly two factors: 1 and itself","Any even number"], a: 2, exp: "Prime numbers (2, 3, 5, 7, 11, 13, ...) are only divisible by 1 and themselves. Note: 1 is NOT prime. Primes are the 'atoms' of numbers and are critical in cryptography — the security behind HTTPS and banking apps relies on prime factoring being computationally hard." },
+    { q: "What is the slope of a line through the points (0, 2) and (4, 10)?", opts: ["1","2","3","4"], a: 1, exp: "Slope = (y₂ − y₁) ÷ (x₂ − x₁) = (10 − 2) ÷ (4 − 0) = 8 ÷ 4 = 2. Slope measures steepness (rise over run). A slope of 2 means for every 1 unit to the right, the line rises 2 units." },
+    { q: "What is the probability of a fair coin landing heads?", opts: ["1 in 4","1 in 3","1 in 2","1 in 6"], a: 2, exp: "A fair coin has two equally likely outcomes (heads or tails), so P(heads) = 1/2 = 50%. Probability ranges from 0 (impossible) to 1 (certain). Each flip is independent — past results don't change future probabilities." },
+    { q: "What is the area of a rectangle with length 8 and width 5?", opts: ["13","26","40","80"], a: 2, exp: "Area = length × width = 8 × 5 = 40 square units. Area measures the 2D surface inside a shape. Perimeter = 2(l + w) = 2(13) = 26 units (the outside boundary). These formulas apply directly in construction, flooring, and screen design." },
+  ],
+  energy: [
+    { q: "What energy source do solar panels use to generate electricity?", opts: ["Wind","Heat from inside Earth","Sunlight","Water flow"], a: 2, exp: "Photovoltaic (PV) solar panels convert sunlight directly into electricity via the photoelectric effect — photons knock electrons loose in silicon semiconductors, creating current. Solar prices have dropped over 90% since 2010, making it the cheapest electricity source in history." },
+    { q: "What is a fossil fuel?", opts: ["Fuel made from farm-grown plants","Coal, oil, or natural gas formed from ancient organisms over millions of years under heat and pressure","Nuclear fuel from uranium","Fuel made from algae"], a: 1, exp: "Fossil fuels (coal, oil, natural gas) formed from ancient organisms over millions of years. They release stored carbon when burned and currently supply about 80% of global energy — but also emit CO₂, contributing to climate change." },
+    { q: "What does 'renewable energy' mean?", opts: ["Energy that is always cheap","Energy from sources that naturally replenish on human timescales","Energy with zero environmental impact","Energy produced only by the government"], a: 1, exp: "Renewable sources — solar, wind, hydro, geothermal, biomass — replenish naturally and won't run out on human timescales. Non-renewables (coal, oil, gas) took millions of years to form and are gone once burned." },
+    { q: "Which gas, released by burning fossil fuels, is the primary driver of climate change?", opts: ["Oxygen","Nitrogen","Hydrogen","Carbon dioxide (CO₂)"], a: 3, exp: "CO₂ (carbon dioxide) is the main greenhouse gas from human activity. Burning coal, oil, and gas releases CO₂ that was stored underground for millions of years. Atmospheric CO₂ has risen from ~280 ppm before industrialization to over 420 ppm today." },
+    { q: "How do wind turbines generate electricity?", opts: ["By heating water to make steam","By burning natural gas","By using wind to spin blades connected to a generator","By collecting solar energy"], a: 2, exp: "Wind turbines capture kinetic energy from moving air via large blades that spin a generator to produce electricity. Wind is now often the cheapest source of new electricity in the US and Europe, with turbines reaching heights over 200 meters." },
+    { q: "What is hydroelectric power?", opts: ["Power from burning hydrogen","Electricity generated by moving water spinning turbines","Power from splitting water molecules","Energy from underwater thermal vents"], a: 1, exp: "Hydroelectric power uses falling or flowing water to spin turbines connected to generators. It's the world's largest source of renewable electricity — about 16% of global generation. The Hoover Dam and Three Gorges Dam are famous examples." },
+  ],
+  materials: [
+    { q: "What is the hardest natural material on Earth?", opts: ["Steel","Quartz","Titanium","Diamond"], a: 3, exp: "Diamond is the hardest natural substance, scoring 10 on the Mohs hardness scale. Its extreme hardness comes from carbon atoms bonded in a rigid tetrahedral crystal structure. Used in industrial cutting tools, drill bits, and jewelry." },
+    { q: "What is the difference between a conductor and an insulator?", opts: ["Conductors are always metals; insulators are always plastics","Conductors allow electricity to flow freely; insulators resist the flow of electricity","Conductors resist heat; insulators conduct heat","There's no real difference"], a: 1, exp: "Conductors (copper, aluminum, gold) have electrons that flow easily when voltage is applied. Insulators (rubber, plastic, glass) tightly hold electrons, blocking current. That's why electrical wires use copper inside rubber/plastic coating." },
+    { q: "What is steel primarily made of?", opts: ["Aluminum and carbon","Iron and carbon","Copper and zinc","Titanium and nickel"], a: 1, exp: "Steel is an alloy of iron (Fe) and a small amount of carbon (0.02–2.14%). Adding carbon makes iron significantly stronger and harder. Steel is the world's most-used construction and manufacturing material — found in buildings, cars, bridges, and appliances." },
+    { q: "What is an alloy?", opts: ["A pure metallic element","A mixture of elements — at least one a metal — engineered for improved properties","A synthetic plastic","A type of ceramic"], a: 1, exp: "Alloys mix metals (sometimes with non-metals) to achieve better properties than pure metals. Steel (iron + carbon), stainless steel (iron + chromium + nickel), brass (copper + zinc), and bronze (copper + tin) are all everyday alloys." },
+    { q: "What is a semiconductor?", opts: ["A material that never conducts electricity","A material that conducts electricity under certain conditions and can be precisely controlled","A very thin metal","A material that only conducts heat"], a: 1, exp: "Semiconductors (silicon, germanium) conduct electricity under certain conditions. By adding tiny amounts of impurities (doping), their conductivity can be controlled precisely. This is what makes transistors possible — and therefore all modern computers and smartphones." },
+    { q: "Why is carbon fiber used in high-performance products?", opts: ["It's the cheapest available material","It has very high strength combined with very low weight","It is transparent to X-rays","It conducts electricity better than copper"], a: 1, exp: "Carbon fiber reinforced polymer (CFRP) is stronger than steel at about 1/5 the weight. This extraordinary strength-to-weight ratio makes it ideal for aerospace (Boeing 787 fuselage), Formula 1 cars, bicycles, and sporting equipment." },
+  ],
+  cybersecurity: [
+    { q: "What is phishing?", opts: ["A virus that deletes files","A scam that tricks users into revealing passwords or personal info by impersonating a trusted source","A way to block internet ads","A method for speeding up your internet"], a: 1, exp: "Phishing uses fake emails, texts, or websites that mimic trusted companies (banks, Apple, Google) to steal your credentials. 'Click here to verify your account' is a classic phishing line. Always check the sender's actual email address carefully." },
+    { q: "What makes a password strong?", opts: ["Using your birthday","Being long (12+ characters) with a mix of uppercase, lowercase, numbers, and symbols","Using the same password everywhere for convenience","Being your pet's name"], a: 1, exp: "A strong password is long and uses varied characters — 'Tr0ub4dor&3' beats 'password123'. A password manager (Bitwarden, 1Password) generates and stores unique strong passwords for every site, so you only need to remember one master password." },
+    { q: "What does HTTPS in a web address indicate?", opts: ["The site loads faster","The connection between your browser and the site is encrypted and secure","The site is government-approved","The site has no malware"], a: 1, exp: "HTTPS uses TLS encryption to protect data sent between your browser and the website. The padlock icon confirms this. Never enter passwords or payment info on plain HTTP sites — on the same Wi-Fi, anyone could intercept your data." },
+    { q: "What is two-factor authentication (2FA)?", opts: ["Using two different passwords","Logging in from two devices","A second verification step beyond your password — like a code from an app — to confirm your identity","Sharing account access with two people"], a: 2, exp: "2FA requires two types of proof: something you know (password) + something you have (authenticator app code, SMS) or are (fingerprint/face). Even if a hacker steals your password, they still can't log in without your second factor." },
+    { q: "What is malware?", opts: ["Software that runs slowly","Malicious software designed to damage systems, steal data, or gain unauthorized access","An outdated operating system","A slow internet connection"], a: 1, exp: "Malware (malicious software) includes viruses, ransomware, spyware, and trojans. Ransomware encrypts your files and demands payment to restore them. Keep your OS and apps updated — most attacks exploit known security holes that patches already fix." },
+    { q: "What does a VPN do?", opts: ["Makes Wi-Fi faster","Blocks all ads automatically","Encrypts your internet traffic and hides your real IP address","Controls parental restrictions"], a: 2, exp: "A VPN (Virtual Private Network) encrypts your internet traffic and routes it through a server, masking your IP address. It protects your data on public Wi-Fi (coffee shops, airports). Companies use VPNs for remote employees to securely access internal systems." },
+    { q: "What is social engineering in cybersecurity?", opts: ["Building social media apps","Manipulating people into revealing confidential information or doing harmful actions","Programming social networks","Setting up firewalls"], a: 1, exp: "Social engineering exploits human psychology rather than software bugs. An attacker might call pretending to be IT support and ask for your password, or send a 'package delivery' text with a malicious link. Most major data breaches involve some form of social engineering." },
+  ],
+  robotics: [
+    { q: "What does 'AI' stand for?", opts: ["Automated Input","Artificial Intelligence","Advanced Iteration","Automated Interface"], a: 1, exp: "AI (Artificial Intelligence) is the field of creating computer systems that can perform tasks typically requiring human intelligence — recognizing faces, understanding speech, translating languages, writing text, and making decisions." },
+    { q: "What is a drone?", opts: ["A type of computer program","An Unmanned Aerial Vehicle (UAV) operated without a pilot on board","A type of battery","A robotic arm"], a: 1, exp: "A drone (UAV) is an aircraft with no human pilot aboard, controlled remotely or autonomously. Consumer drones use quadrotor designs for stable flight. Uses include photography, agriculture monitoring, package delivery (Amazon), search-and-rescue, and military operations." },
+    { q: "What is machine learning?", opts: ["Writing step-by-step rules for every situation","A type of AI where computers learn patterns from data to improve without being explicitly programmed for each case","Building physical robots","Speeding up computer processors"], a: 1, exp: "Machine learning trains algorithms on data to find patterns, then applies them to new data. ChatGPT, Netflix recommendations, spam filters, face unlock on phones, and medical image diagnosis all use machine learning. Its rapid progress since ~2012 drives today's AI boom." },
+    { q: "What does a self-driving car primarily use to perceive its surroundings?", opts: ["Only GPS maps","Cameras, radar, and lidar sensors working together","Infrared night vision only","Wi-Fi signal strength"], a: 1, exp: "Self-driving cars fuse multiple sensors: cameras (visual detail and color), radar (detects speed and distance in rain/fog), and lidar (3D laser mapping). No single sensor works reliably alone — combining them (sensor fusion) provides the redundancy needed for safety." },
+    { q: "What is ChatGPT an example of?", opts: ["A search engine","A social media platform","A large language model AI that generates human-like text","A cybersecurity tool"], a: 2, exp: "ChatGPT is a large language model (LLM) built by OpenAI. Trained on massive amounts of text data, it can answer questions, write code, summarize documents, and hold conversations. Released in November 2022, it reached 100 million users in just 2 months — the fastest-growing app in history at that time." },
+    { q: "What does 'degrees of freedom' (DOF) mean in robotics?", opts: ["The number of sensors on a robot","The number of independent ways a robot can move","The maximum weight a robot can lift","The number of motors"], a: 1, exp: "Degrees of freedom (DOF) describes how many independent directions something can move. A door hinge: 1 DOF. A human arm: 7 DOF. More DOF = more flexibility and dexterity, but also more complex programming and control algorithms." },
+  ],
+  history: [
+    { q: "What year was the first iPhone released?", opts: ["2003","2005","2007","2010"], a: 2, exp: "Apple launched the original iPhone on June 29, 2007. Steve Jobs called it 'a revolutionary product that changes everything.' It combined a phone, iPod, and internet device in one touchscreen package, launching the modern smartphone era and the app economy." },
+    { q: "Who invented the World Wide Web?", opts: ["Steve Jobs","Bill Gates","Tim Berners-Lee","Mark Zuckerberg"], a: 2, exp: "Tim Berners-Lee invented the World Wide Web in 1989 while working at CERN in Switzerland. He created HTTP (the protocol), HTML (the language), and the first web browser. The web and the internet are different — the internet is the network; the web is the system of linked pages on it." },
+    { q: "What company created the Windows operating system?", opts: ["Apple","Google","IBM","Microsoft"], a: 3, exp: "Microsoft created Windows, first released in 1985. Founded by Bill Gates and Paul Allen in 1975, Microsoft dominates desktop operating systems with about 70% global market share. Windows 11, released in 2021, is the current version." },
+    { q: "What year was YouTube founded?", opts: ["2001","2003","2005","2008"], a: 2, exp: "YouTube was founded in 2005 by three former PayPal employees and acquired by Google in 2006 for $1.65 billion. Today it has over 2 billion logged-in monthly users and 500 hours of video uploaded every minute — making it the world's second-largest search engine after Google." },
+    { q: "Who co-founded Apple with Steve Jobs?", opts: ["Bill Gates","Steve Wozniak","Elon Musk","Jeff Bezos"], a: 1, exp: "Steve Wozniak ('Woz') co-founded Apple with Steve Jobs and Ronald Wayne in 1976 in a garage. Wozniak designed the original Apple I and Apple II computers. Jobs focused on product vision and marketing. Their partnership created one of history's most valuable companies." },
+    { q: "What does 'GPS' stand for?", opts: ["Global Positioning System","General Proximity Sensor","Ground Positioning Satellite","Geographic Path System"], a: 0, exp: "GPS (Global Positioning System) is a network of 30+ US satellites that lets any GPS receiver pinpoint its location anywhere on Earth within meters. Originally military, it was opened to civilians in the 1980s and now powers navigation apps, ride-sharing, and emergency services." },
+    { q: "What was the name of the first social networking site to reach mass popularity in the US?", opts: ["Facebook","MySpace","Twitter","Instagram"], a: 1, exp: "MySpace (launched 2003) was the first social network to achieve mass popularity in the US before Facebook (2004) overtook it around 2008. Facebook now has over 3 billion monthly active users. Social media transformed communication, news distribution, and advertising." },
+  ],
+};
+
+// ─── App state ────────────────────────────────────────────────────────────────
+const CATEGORIES = [
+  { id: 'computing',     name: 'Computing & IT',   icon: '💻' },
+  { id: 'programming',   name: 'Programming',       icon: '{ }' },
+  { id: 'engineering',   name: 'Engineering',       icon: '⚙️' },
+  { id: 'electronics',   name: 'Electronics',       icon: '⚡' },
+  { id: 'biotech',       name: 'Biotech & Med',     icon: '🧬' },
+  { id: 'aerospace',     name: 'Aerospace',         icon: '🚀' },
+  { id: 'math',          name: 'Applied Math',      icon: '∑' },
+  { id: 'energy',        name: 'Energy & Env.',     icon: '🌱' },
+  { id: 'materials',     name: 'Materials Sci.',    icon: '🔬' },
+  { id: 'cybersecurity', name: 'Cybersecurity',     icon: '🔐' },
+  { id: 'robotics',      name: 'Robotics & AI',     icon: '🤖' },
+  { id: 'history',       name: 'Tech History',      icon: '📡' },
+];
+
+let selectedCat = 'computing';
+let mode = 'single'; // 'single' or 'all'
+let stats = { total: 0, correct: 0, wrong: 0, streak: 0 };
+let answered = false;
+let history = [];
+let usedQuestions = {};
+
+// Kick off connectivity check immediately
+checkConnectivity();
+
+// Countdown
+(function() {
+  const target = new Date('2026-04-23T09:00:00');
+  const diff = Math.ceil((target - new Date()) / 86400000);
+  document.getElementById('days-left').textContent = diff > 0 ? diff : '0';
+})();
+
+// Build category grid
+const grid = document.getElementById('cat-grid');
+CATEGORIES.forEach(cat => {
+  const count = QUESTION_BANK[cat.id]?.length || 0;
+  const btn = document.createElement('button');
+  btn.className = 'cat-btn' + (cat.id === selectedCat ? ' active' : '');
+  btn.dataset.id = cat.id;
+  btn.innerHTML = `<div class="cat-icon">${cat.icon}</div><div class="cat-name">${cat.name}</div><div class="cat-count">${count} questions</div>`;
+  btn.onclick = () => {
+    document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedCat = cat.id;
+  };
+  grid.appendChild(btn);
+});
+
+function setMode(m) {
+  mode = m;
+  document.getElementById('mode-single').classList.toggle('active', m === 'single');
+  document.getElementById('mode-all').classList.toggle('active', m === 'all');
+}
+
+// ─── Local question picker (exhausts all questions before repeating) ──────────
+function pickLocalQuestion(catId) {
+  const pool = QUESTION_BANK[catId] || [];
+  if (!usedQuestions[catId]) usedQuestions[catId] = [];
+  let avail = pool.map((_,i) => i).filter(i => !usedQuestions[catId].includes(i));
+  if (avail.length === 0) { usedQuestions[catId] = []; avail = pool.map((_,i) => i); }
+  const idx = avail[Math.floor(Math.random() * avail.length)];
+  usedQuestions[catId].push(idx);
+  return { ...pool[idx], catId };
+}
+
+function shuffleOptions(q) {
+  const indexed = q.opts.map((text, i) => ({ text, correct: i === q.a }));
+  for (let i = indexed.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [indexed[i], indexed[j]] = [indexed[j], indexed[i]];
+  }
+  const newCorrect = indexed.findIndex(o => o.correct);
+  return { ...q, opts: indexed.map(o => o.text), a: newCorrect };
+}
+
+// ─── Render a loading skeleton while fetching online ─────────────────────────
+function showLoadingCard() {
+  document.getElementById('question-area').innerHTML = `
+    <div class="q-card" style="opacity:0.5">
+      <div class="q-meta">
+        <span class="q-cat-tag">🌐 FETCHING ONLINE QUESTION…</span>
+      </div>
+      <div class="q-text" style="color:var(--muted)">Pulling from Open Trivia Database…</div>
+    </div>`;
+}
+
+// ─── Main question flow (async to support online fetch) ──────────────────────
+async function nextQuestion() {
+  if (isFetching) return;    // prevent double-clicks during async load
+  isFetching = true;
+  answered = false;
+
+  let catId = selectedCat;
+  if (mode === 'all') {
+    const keys = Object.keys(QUESTION_BANK);
+    catId = keys[Math.floor(Math.random() * keys.length)];
+  }
+  const catObj = CATEGORIES.find(c => c.id === catId);
+
+  document.getElementById('go-btn').disabled = true;
+  stats.total++;
+  updateStats();
+
+  let q;
+  if (isOnline) {
+    showLoadingCard();
+    const onlineQ = await pickOnlineQuestion(catId);
+    if (onlineQ) {
+      q = onlineQ;   // already shuffled during OTDB conversion
+    } else {
+      // Fetch failed — mark offline and fall back to local
+      isOnline = false;
+      updateSourceChip('offline');
+      q = shuffleOptions(pickLocalQuestion(catId));
+    }
+  } else {
+    q = shuffleOptions(pickLocalQuestion(catId));
+  }
+
+  isFetching = false;
+
+  const letters = ['A','B','C','D'];
+  // Escape the explanation string for safe inline attribute use
+  const escExp = q.exp
+    .replace(/\\/g,'\\\\')
+    .replace(/`/g,"'")
+    .replace(/"/g,'&quot;');
+
+  // Badge shown on each card to indicate source
+  const sourceBadge = q.source === 'online'
+    ? `<span class="q-src-badge online">🌐 OTDB</span>`
+    : `<span class="q-src-badge local">📋 LOCAL</span>`;
+
+  const optHTML = q.opts.map((opt, i) => `
+    <button class="opt-btn" onclick="checkAnswer(this,${i},${q.a},\`${escExp}\`)" data-idx="${i}">
+      <span class="opt-letter">${letters[i]}</span><span>${opt}</span>
+    </button>`).join('');
+
+  document.getElementById('question-area').innerHTML = `
+    <div class="q-card">
+      <div class="q-meta">
+        <span class="q-cat-tag">${catObj.icon} ${catObj.name}</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          ${sourceBadge}
+          <span class="q-num">Question ${stats.total}</span>
+        </div>
+      </div>
+      <div class="q-text">${q.q}</div>
+      <div class="options">${optHTML}</div>
+      <div id="exp-area"></div>
+    </div>`;
+}
+
+
+function checkAnswer(btn, chosen, correct, exp) {
+  if (answered) return;
+  answered = true;
+  isFetching = false;   // allow next question to proceed
+  document.querySelectorAll('.opt-btn').forEach(b => {
+    b.disabled = true;
+    if (parseInt(b.dataset.idx) === correct) b.classList.add('correct');
+  });
+  const isRight = chosen === correct;
+  if (isRight) { stats.correct++; stats.streak++; }
+  else { btn.classList.add('wrong'); stats.wrong++; stats.streak = 0; }
+  updateStats();
+  const letters = ['A','B','C','D'];
+  document.getElementById('exp-area').innerHTML = `
+    <div class="explanation">
+      <strong>${isRight ? '✓ Correct!' : `✗ Incorrect — Answer: ${letters[correct]}`}</strong>${exp}
+    </div>
+    <button class="next-btn" onclick="nextQuestion()">Next Question →</button>`;
+  history.unshift({ icon: isRight ? '✅' : '❌', q: document.querySelector('.q-text').textContent, cat: document.querySelector('.q-cat-tag').textContent.trim() });
+  updateHistory();
+  document.getElementById('go-btn').disabled = false;
+}
+
+function updateStats() {
+  document.getElementById('q-count').textContent = stats.total;
+  document.getElementById('correct-count').textContent = stats.correct;
+  document.getElementById('wrong-count').textContent = stats.wrong;
+  document.getElementById('streak-count').textContent = stats.streak;
+  const acc = stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) + '%' : '—';
+  document.getElementById('accuracy').textContent = acc;
+  const pct = stats.total > 0 ? (stats.correct / stats.total) * 100 : 0;
+  document.getElementById('progress-fill').style.width = pct + '%';
+}
+
+function updateHistory() {
+  document.getElementById('history-section').style.display = 'block';
+  document.getElementById('history-list').innerHTML = history.slice(0, 7).map(h => `
+    <div class="history-item">
+      <span class="history-icon">${h.icon}</span>
+      <span class="history-q">${h.q}</span>
+      <span class="history-cat">${h.cat}</span>
+    </div>`).join('');
+}
+</script>
+</body>
+</html>
