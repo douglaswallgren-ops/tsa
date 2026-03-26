@@ -1,11 +1,16 @@
 <!DOCTYPE html>
-<!-- TSA Tech Bowl Study Tool v1.4.2 -->
+<!-- TSA Tech Bowl Study Tool v1.4.3 -->
 <!-- Copyright Douglas Wallgren -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TSA Tech Bowl — Study Tool v1.4.2</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#050a0f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<title>TSA Tech Bowl — Study Tool v1.4.3</title>
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow:wght@300;400;600;700;900&family=Barlow+Condensed:wght@700;900&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -273,58 +278,107 @@
   .q-src-badge.online  { color: var(--accent2); border: 1px solid rgba(0,255,153,0.25); background: rgba(0,255,153,0.06); }
   .q-src-badge.local   { color: var(--muted);   border: 1px solid var(--border);        background: transparent; }
 
-  /* ─── Safari / cross-browser base fixes ──────────────────────────────────── */
+  /* ─── Cross-browser base ─────────────────────────────────────────────────── */
   html { -webkit-text-size-adjust: 100%; }
-  body { -webkit-font-smoothing: antialiased; }
-  button {
-    -webkit-appearance: none;
-    touch-action: manipulation;   /* removes 300 ms tap delay in Safari */
+  body {
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior-y: contain;
   }
+  button { -webkit-appearance: none; touch-action: manipulation; }
+
+  /* Safe-area padding for notched phones (iPhone X+) */
+  .app { padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px)); }
+
+  /* Minimum tap targets */
+  .opt-btn                             { min-height: 48px; }
+  .go-btn, .next-btn, .login-btn,
+  .comp-play-again                     { min-height: 48px; }
+  .mode-btn, .src-btn                  { min-height: 40px; }
+  .cat-btn                             { min-height: 42px; }
+  .lb-tab                              { min-height: 36px; }
 
   /* ─── Suppress sticky-hover on touch devices ─────────────────────────────── */
   @media (hover: none) {
-    .cat-btn:hover               { border-color: var(--border); background: var(--panel); }
-    .opt-btn:not(:disabled):hover{ border-color: var(--border); background: rgba(255,255,255,0.02); }
-    .go-btn:hover:not(:disabled) { background: var(--accent); transform: none; }
-    .next-btn:hover              { background: transparent; }
-    .mode-btn:hover              { border-color: var(--border); color: var(--muted); }
+    .cat-btn:hover                { border-color: var(--border); background: var(--panel); }
+    .opt-btn:not(:disabled):hover { border-color: var(--border); background: rgba(255,255,255,0.02); }
+    .go-btn:hover:not(:disabled)  { background: var(--accent); transform: none; }
+    .next-btn:hover               { background: transparent; }
+    .mode-btn:hover               { border-color: var(--border); color: var(--muted); }
+    .src-btn:hover                { border-color: var(--border); color: var(--muted); }
+    .lb-tab:hover                 { border-color: var(--border); color: var(--muted); }
+    .login-btn:hover              { background: var(--accent); }
+    .u-switch:hover               { border-color: var(--border); color: var(--muted); }
   }
 
   /* ─── Mobile layout (≤ 600 px) ───────────────────────────────────────────── */
   @media (max-width: 600px) {
-    .app { padding: 14px 14px 48px; }
+    .app { padding: 14px 14px calc(48px + env(safe-area-inset-bottom, 0px)); }
 
-    /* Header */
+    /* Header — stack logo and controls */
+    header { align-items: flex-start; margin-bottom: 16px; gap: 10px; }
     .logo-block h1 { font-size: 1.85rem; }
-    header { margin-bottom: 20px; }
 
-    /* Stats strip — tighter chips, allow two rows */
-    .score-bar { gap: 6px; }
-    .stat-chip  { padding: 6px 10px; font-size: 0.63rem; }
-    .stat-chip span { font-size: 0.9rem; }
+    /* Score bar — compact chips */
+    .score-bar { gap: 5px; }
+    .stat-chip { padding: 6px 9px; font-size: 0.6rem; gap: 5px; }
+    .stat-chip span { font-size: 0.88rem; }
 
-    /* Category grid — 2 fixed columns on phones */
-    .cat-grid { grid-template-columns: repeat(2, 1fr); }
+    /* Category grid */
+    .cat-grid { grid-template-columns: repeat(2, 1fr); gap: 7px; }
 
-    /* Mode buttons — taller tap target */
-    .mode-btn { padding: 10px 14px; font-size: 0.68rem; }
+    /* Mode / source rows — buttons fill and center */
+    .mode-row { gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
+    .src-row  { gap: 6px; margin-bottom: 12px; }
+    .mode-btn { flex: 1; text-align: center; padding: 10px 8px; font-size: 0.65rem; }
+    .src-btn  { flex: 1; justify-content: center; padding: 10px 8px; font-size: 0.65rem; }
+
+    /* Leaderboard tabs */
+    .lb-tabs { gap: 6px; }
+    .lb-tab  { flex: 1; text-align: center; padding: 10px 6px; font-size: 0.6rem; }
 
     /* Question card */
-    .q-card    { padding: 16px 14px; }
-    .q-text    { font-size: 1rem; }
-    .opt-btn   { padding: 13px 14px; font-size: 0.9rem; }
+    .q-card  { padding: 16px 14px; }
+    .q-text  { font-size: 1rem; }
+    .opt-btn { padding: 13px 14px; font-size: 0.9rem; }
 
-    /* History — let text wrap instead of overflowing */
+    /* Overlays — scrollable so they never clip on small screens */
+    .login-overlay,
+    .comp-overlay {
+      align-items: flex-start;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 16px;
+    }
+    .login-card { padding: 28px 20px; margin: auto; }
+    .comp-card  { padding: 28px 20px; margin: auto; }
+
+    /* History */
     .history-q { white-space: normal; }
   }
 
-  /* ─── Extra-small phones (≤ 380 px) ─────────────────────────────────────── */
-  @media (max-width: 380px) {
+  /* ─── Extra-small phones (≤ 400 px) ─────────────────────────────────────── */
+  @media (max-width: 400px) {
     .logo-block h1 { font-size: 1.5rem; }
     .countdown .days { font-size: 1.6rem; }
-    .cat-grid { grid-template-columns: repeat(2, 1fr); gap: 6px; }
-    .mode-row { flex-direction: column; align-items: flex-start; }
+
+    /* Score bar — 3-column grid so chips stay readable */
+    .score-bar {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 5px;
+    }
+    .stat-chip { justify-content: center; font-size: 0.56rem; padding: 5px 4px; gap: 4px; }
+    .stat-chip span { font-size: 0.82rem; }
+
+    /* Mode rows full-width */
+    .mode-row { flex-direction: column; }
     .mode-btn { width: 100%; text-align: center; }
+
+    /* Login card tighter */
+    .login-card { padding: 22px 16px; }
+    .comp-card  { padding: 22px 16px; }
+    .comp-score-big { font-size: 3.5rem; }
   }
 
   /* ─── Login overlay ──────────────────────────────────────────────────────── */
@@ -492,7 +546,7 @@
   <header>
     <div class="logo-block">
       <h1>TSA Tech Bowl</h1>
-      <p>// STUDY TERMINAL — STATE COMPETITION PREP &nbsp;·&nbsp; v1.4.2</p>
+      <p>// STUDY TERMINAL — STATE COMPETITION PREP &nbsp;·&nbsp; v1.4.3</p>
     </div>
     <div class="countdown">
       <div class="days" id="days-left">—</div>
