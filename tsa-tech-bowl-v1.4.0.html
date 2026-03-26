@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- TSA Tech Bowl Study Tool v1.3.0 -->
+<!-- TSA Tech Bowl Study Tool v1.4.0 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TSA Tech Bowl — Study Tool v1.3.0</title>
+<title>TSA Tech Bowl — Study Tool v1.4.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow:wght@300;400;600;700;900&family=Barlow+Condensed:wght@700;900&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -387,6 +387,86 @@
     color: var(--muted); cursor: pointer; transition: all 0.15s;
   }
   .u-switch:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ─── Play-mode selector ─────────────────────────────────────────────────── */
+  .mode-btn.comp { }
+  .mode-btn.comp.active { border-color: var(--accent3); color: var(--accent3); background: rgba(255,107,53,0.08); }
+  .mode-btn.comp:hover  { border-color: var(--accent3); color: var(--accent3); }
+
+  /* ─── Timer chip ─────────────────────────────────────────────────────────── */
+  .stat-chip.timer span { color: var(--accent3); }
+  .stat-chip.timer.urgent span { color: var(--wrong); animation: blink 0.5s ease infinite alternate; }
+  @keyframes blink { from { opacity: 1; } to { opacity: 0.4; } }
+
+  /* ─── Competition results overlay ────────────────────────────────────────── */
+  .comp-overlay {
+    position: fixed; inset: 0; background: rgba(5,10,15,0.96); z-index: 500;
+    display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px);
+  }
+  .comp-card {
+    background: var(--panel); border: 1px solid var(--accent3); border-radius: 8px;
+    padding: 40px 36px; width: 100%; max-width: 460px;
+    box-shadow: 0 0 60px rgba(255,107,53,0.2); animation: fadeIn 0.3s ease; text-align: center;
+  }
+  .comp-card .comp-title {
+    font-family: var(--cond); font-size: 2rem; font-weight: 900;
+    letter-spacing: 0.1em; color: var(--accent3); text-transform: uppercase; margin-bottom: 6px;
+  }
+  .comp-card .comp-sub {
+    font-family: var(--mono); font-size: 0.65rem; color: var(--muted);
+    letter-spacing: 0.12em; margin-bottom: 22px;
+  }
+  .comp-score-big {
+    font-family: var(--cond); font-size: 5rem; font-weight: 900;
+    color: var(--accent2); line-height: 1; margin-bottom: 4px;
+  }
+  .comp-score-label {
+    font-family: var(--mono); font-size: 0.65rem; color: var(--muted);
+    letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 20px;
+  }
+  .comp-stats-row {
+    display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap;
+  }
+  .comp-stat-chip {
+    background: rgba(0,212,255,0.04); border: 1px solid var(--border); border-radius: 4px;
+    padding: 10px 18px; font-family: var(--mono); font-size: 0.68rem; color: var(--muted);
+  }
+  .comp-stat-chip span { display: block; font-size: 1.2rem; color: var(--accent); margin-bottom: 2px; font-weight: 700; }
+  .comp-new-best {
+    font-family: var(--mono); font-size: 0.72rem; color: var(--accent2);
+    letter-spacing: 0.08em; margin-bottom: 18px;
+  }
+  .comp-play-again {
+    width: 100%; padding: 13px; background: var(--accent3); color: white; border: none;
+    border-radius: 4px; font-family: var(--cond); font-size: 1.05rem; font-weight: 900;
+    letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; transition: opacity 0.15s;
+  }
+  .comp-play-again:hover { opacity: 0.85; }
+
+  /* ─── Leaderboard ─────────────────────────────────────────────────────────── */
+  .lb-section { margin-top: 32px; }
+  .lb-tabs { display: flex; gap: 8px; margin-bottom: 10px; }
+  .lb-tab {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 3px;
+    padding: 6px 14px; font-family: var(--mono); font-size: 0.65rem; color: var(--muted);
+    cursor: pointer; transition: all 0.15s;
+  }
+  .lb-tab.active { border-color: var(--accent); color: var(--accent); background: rgba(0,212,255,0.07); }
+  .lb-tab.comp-tab.active { border-color: var(--accent3); color: var(--accent3); background: rgba(255,107,53,0.07); }
+  .lb-row {
+    display: flex; align-items: center; gap: 10px; padding: 9px 14px;
+    background: var(--panel); border: 1px solid var(--border); border-radius: 4px;
+    margin-bottom: 5px; font-family: var(--mono); font-size: 0.72rem; animation: fadeIn 0.2s ease;
+  }
+  .lb-row.me { border-color: var(--accent2); background: rgba(0,255,153,0.04); }
+  .lb-rank { width: 22px; color: var(--muted); flex-shrink: 0; }
+  .lb-rank.gold   { color: #ffd700; }
+  .lb-rank.silver { color: #c0c0c0; }
+  .lb-rank.bronze { color: #cd7f32; }
+  .lb-name { flex: 1; color: var(--text); }
+  .lb-name.me { color: var(--accent2); }
+  .lb-val { color: var(--accent); font-weight: 700; }
+  .lb-empty { font-family: var(--mono); font-size: 0.7rem; color: var(--muted); padding: 16px; text-align: center; }
 </style>
 </head>
 <body>
@@ -411,7 +491,7 @@
   <header>
     <div class="logo-block">
       <h1>TSA Tech Bowl</h1>
-      <p>// STUDY TERMINAL — STATE COMPETITION PREP &nbsp;·&nbsp; v1.3.0</p>
+      <p>// STUDY TERMINAL — STATE COMPETITION PREP &nbsp;·&nbsp; v1.4.0</p>
     </div>
     <div class="countdown">
       <div class="days" id="days-left">—</div>
@@ -430,6 +510,7 @@
     <div class="stat-chip red">WRONG <span id="wrong-count">0</span></div>
     <div class="stat-chip">STREAK <span id="streak-count">0</span> 🔥</div>
     <div class="stat-chip">ACCURACY <span id="accuracy">—</span></div>
+    <div class="stat-chip timer" id="timer-chip" style="display:none">TIMER <span id="comp-timer">60</span>s</div>
   </div>
 
   <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
@@ -448,13 +529,19 @@
   </div>
 
   <div class="mode-row">
-    <span class="mode-label">MODE:</span>
+    <span class="mode-label">PLAY MODE:</span>
+    <button class="mode-btn active" id="pm-study" onclick="setPlayMode('study')">STUDY MODE</button>
+    <button class="mode-btn comp" id="pm-comp" onclick="setPlayMode('competition')">⏱ COMPETITION — 60 SEC</button>
+  </div>
+
+  <div class="mode-row" id="topic-row">
+    <span class="mode-label">TOPIC:</span>
     <button class="mode-btn active" id="mode-single" onclick="setMode('single')">SINGLE CATEGORY</button>
     <button class="mode-btn" id="mode-all" onclick="setMode('all')">ALL CATEGORIES (MIXED)</button>
   </div>
 
-  <button class="go-btn" id="go-btn" onclick="nextQuestion()">
-    <span>⚡</span> GENERATE QUESTION
+  <button class="go-btn" id="go-btn" onclick="goBtn()">
+    <span>⚡</span> <span id="go-btn-label">GENERATE QUESTION</span>
   </button>
 
   <div id="question-area"></div>
@@ -462,6 +549,28 @@
   <div class="history-section" id="history-section" style="display:none">
     <div class="section-label">Recent Questions</div>
     <div class="history-list" id="history-list"></div>
+  </div>
+
+  <div class="lb-section" id="lb-section">
+    <div class="section-label">Leaderboard</div>
+    <div class="lb-tabs">
+      <button class="lb-tab active" id="lb-tab-study" onclick="switchLbTab('study')">STUDY — BEST STREAK</button>
+      <button class="lb-tab comp-tab" id="lb-tab-comp" onclick="switchLbTab('competition')">⏱ COMPETITION — 60 SEC</button>
+    </div>
+    <div id="lb-table"></div>
+  </div>
+</div>
+
+<!-- ─── Competition results overlay ─────────────────────────────────────────── -->
+<div id="comp-overlay" class="comp-overlay" style="display:none">
+  <div class="comp-card">
+    <div class="comp-title">TIME'S UP!</div>
+    <div class="comp-sub">// COMPETITION ROUND COMPLETE</div>
+    <div class="comp-score-big" id="comp-score-big">0</div>
+    <div class="comp-score-label">CORRECT ANSWERS IN 60 SECONDS</div>
+    <div class="comp-stats-row" id="comp-stats-row"></div>
+    <div class="comp-new-best" id="comp-new-best" style="display:none">★ NEW PERSONAL BEST!</div>
+    <button class="comp-play-again" onclick="dismissCompResults()">PLAY AGAIN ⏱</button>
   </div>
 </div>
 
@@ -589,7 +698,7 @@ function attemptLogin() {
       `<div class="wc-stat">ACCURACY &nbsp;<span>${acc}</span></div>` +
       `<div class="wc-stat">BEST STREAK &nbsp;<span>${existing.bestStreak || 0} 🔥</span></div>`;
   } else {
-    currentUser = { name: raw.trim(), total: 0, correct: 0, wrong: 0, bestStreak: 0 };
+    currentUser = { name: raw.trim(), total: 0, correct: 0, wrong: 0, bestStreak: 0, compBest: 0 };
     dbUpsertUser(currentUser);
     document.getElementById('wc-title').textContent = 'Welcome, ' + currentUser.name + '!';
     document.getElementById('wc-stats').innerHTML =
@@ -604,6 +713,7 @@ function dismissLogin() {
   const chip = document.getElementById('user-chip');
   document.getElementById('u-name-display').textContent = currentUser.name;
   chip.style.display = 'flex';
+  renderLeaderboard();
 }
 
 function changeUser() {
@@ -766,9 +876,14 @@ const CATEGORIES = [
 
 let selectedCat = 'computing';
 let mode = 'single';
+let playMode = 'study';
 let stats = { total: 0, correct: 0, wrong: 0, streak: 0 };
 let answered = false;
 let history = [];
+let compTimeLeft = 60;
+let compTimer = null;
+let compSession = { correct: 0, total: 0 };
+let lbTab = 'study';
 
 // Check all sources on load
 checkSources();
@@ -799,6 +914,128 @@ function setMode(m) {
   mode = m;
   document.getElementById('mode-single').classList.toggle('active', m === 'single');
   document.getElementById('mode-all').classList.toggle('active', m === 'all');
+}
+
+function setPlayMode(pm) {
+  playMode = pm;
+  document.getElementById('pm-study').classList.toggle('active', pm === 'study');
+  document.getElementById('pm-comp').classList.toggle('active', pm === 'competition');
+  document.getElementById('topic-row').style.display = pm === 'study' ? '' : 'none';
+  document.getElementById('go-btn-label').textContent =
+    pm === 'study' ? 'GENERATE QUESTION' : 'START COMPETITION — 60 SEC ⏱';
+  document.getElementById('timer-chip').style.display = 'none';
+  document.getElementById('history-section').style.display = 'none';
+  document.getElementById('question-area').innerHTML = '';
+  if (compTimer) { clearInterval(compTimer); compTimer = null; }
+}
+
+function goBtn() {
+  if (playMode === 'competition') startCompetition();
+  else nextQuestion();
+}
+
+// ─── Competition mode ─────────────────────────────────────────────────────────
+function startCompetition() {
+  if (compTimer) return;
+  compSession = { correct: 0, total: 0 };
+  compTimeLeft = 60;
+  document.getElementById('timer-chip').style.display = '';
+  document.getElementById('timer-chip').classList.remove('urgent');
+  document.getElementById('comp-timer').textContent = 60;
+  document.getElementById('go-btn').disabled = true;
+  compTimer = setInterval(tickTimer, 1000);
+  nextQuestion();
+}
+
+function tickTimer() {
+  compTimeLeft--;
+  document.getElementById('comp-timer').textContent = compTimeLeft;
+  if (compTimeLeft <= 10) document.getElementById('timer-chip').classList.add('urgent');
+  if (compTimeLeft <= 0) endCompetition();
+}
+
+function endCompetition() {
+  clearInterval(compTimer);
+  compTimer = null;
+  answered = true;
+  isFetching = false;
+  document.querySelectorAll('.opt-btn').forEach(b => b.disabled = true);
+  // Remove any auto-next in flight
+  window._compAutoNext && clearTimeout(window._compAutoNext);
+
+  // Save personal best
+  let isNewBest = false;
+  if (currentUser) {
+    const prev = currentUser.compBest || 0;
+    if (compSession.correct > prev) {
+      currentUser.compBest = compSession.correct;
+      dbUpsertUser(currentUser);
+      isNewBest = true;
+    }
+  }
+
+  // Show results overlay
+  const acc = compSession.total > 0
+    ? Math.round((compSession.correct / compSession.total) * 100) + '%'
+    : '—';
+  document.getElementById('comp-score-big').textContent = compSession.correct;
+  document.getElementById('comp-stats-row').innerHTML =
+    `<div class="comp-stat-chip"><span>${compSession.total}</span>ATTEMPTED</div>` +
+    `<div class="comp-stat-chip"><span>${acc}</span>ACCURACY</div>` +
+    (currentUser ? `<div class="comp-stat-chip"><span>${currentUser.compBest || 0}</span>PERSONAL BEST</div>` : '');
+  const nb = document.getElementById('comp-new-best');
+  nb.style.display = isNewBest ? 'block' : 'none';
+  document.getElementById('comp-overlay').style.display = 'flex';
+
+  renderLeaderboard();
+  document.getElementById('go-btn').disabled = false;
+  document.getElementById('timer-chip').style.display = 'none';
+}
+
+function dismissCompResults() {
+  document.getElementById('comp-overlay').style.display = 'none';
+}
+
+// ─── Leaderboard ──────────────────────────────────────────────────────────────
+function switchLbTab(tab) {
+  lbTab = tab;
+  document.getElementById('lb-tab-study').classList.toggle('active', tab === 'study');
+  document.getElementById('lb-tab-comp').classList.toggle('active', tab === 'competition');
+  renderLeaderboard();
+}
+
+function renderLeaderboard() {
+  const db = dbLoad();
+  const users = Object.values(db);
+  const me = currentUser ? currentUser.name.toLowerCase() : null;
+  let rows, valKey, valLabel;
+
+  if (lbTab === 'study') {
+    rows = [...users].sort((a, b) => (b.bestStreak || 0) - (a.bestStreak || 0))
+                     .filter(u => (u.bestStreak || 0) > 0).slice(0, 10);
+    valKey = 'bestStreak'; valLabel = '🔥 streak';
+  } else {
+    rows = [...users].sort((a, b) => (b.compBest || 0) - (a.compBest || 0))
+                     .filter(u => (u.compBest || 0) > 0).slice(0, 10);
+    valKey = 'compBest'; valLabel = '✓ in 60s';
+  }
+
+  const rankClass = ['gold','silver','bronze'];
+  const rankSymbol = ['①','②','③'];
+  const html = rows.length === 0
+    ? `<div class="lb-empty">No scores yet — ${lbTab === 'study' ? 'build a streak!' : 'play a competition round!'}</div>`
+    : rows.map((u, i) => {
+        const isMe = u.name.toLowerCase() === me;
+        const rc = rankClass[i] || '';
+        const rs = rankSymbol[i] || (i + 1);
+        return `<div class="lb-row${isMe ? ' me' : ''}">
+          <span class="lb-rank ${rc}">${rs}</span>
+          <span class="lb-name${isMe ? ' me' : ''}">${u.name}</span>
+          <span class="lb-val">${u[valKey] || 0} <span style="font-size:0.6rem;color:var(--muted)">${valLabel}</span></span>
+        </div>`;
+      }).join('');
+
+  document.getElementById('lb-table').innerHTML = html;
 }
 
 // ─── Loading skeleton ─────────────────────────────────────────────────────────
@@ -888,7 +1125,7 @@ async function nextQuestion() {
 function checkAnswer(btn, chosen, correct, exp) {
   if (answered) return;
   answered = true;
-  isFetching = false;   // allow next question to proceed
+  isFetching = false;
   document.querySelectorAll('.opt-btn').forEach(b => {
     b.disabled = true;
     if (parseInt(b.dataset.idx) === correct) b.classList.add('correct');
@@ -898,15 +1135,31 @@ function checkAnswer(btn, chosen, correct, exp) {
   else { btn.classList.add('wrong'); stats.wrong++; stats.streak = 0; }
   updateStats();
   persistStats();
-  const letters = ['A','B','C','D'];
-  document.getElementById('exp-area').innerHTML = `
-    <div class="explanation">
-      <strong>${isRight ? '✓ Correct!' : `✗ Incorrect — Answer: ${letters[correct]}`}</strong>${exp}
-    </div>
-    <button class="next-btn" onclick="nextQuestion()">Next Question →</button>`;
-  history.unshift({ icon: isRight ? '✅' : '❌', q: document.querySelector('.q-text').textContent, cat: document.querySelector('.q-cat-tag').textContent.trim() });
-  updateHistory();
-  document.getElementById('go-btn').disabled = false;
+
+  if (playMode === 'competition') {
+    compSession.total++;
+    if (isRight) compSession.correct++;
+    // Minimal feedback in competition mode — no explanation, auto-advance
+    const letters = ['A','B','C','D'];
+    document.getElementById('exp-area').innerHTML = `
+      <div class="explanation" style="padding:10px 14px">
+        <strong style="margin-bottom:0">${isRight ? '✓ Correct!' : `✗ Incorrect — ${letters[correct]}`}</strong>
+      </div>`;
+    if (compTimer) {
+      window._compAutoNext = setTimeout(() => { if (compTimer) nextQuestion(); }, 1200);
+    }
+  } else {
+    // Study mode — full explanation + manual next
+    const letters = ['A','B','C','D'];
+    document.getElementById('exp-area').innerHTML = `
+      <div class="explanation">
+        <strong>${isRight ? '✓ Correct!' : `✗ Incorrect — Answer: ${letters[correct]}`}</strong>${exp}
+      </div>
+      <button class="next-btn" onclick="nextQuestion()">Next Question →</button>`;
+    history.unshift({ icon: isRight ? '✅' : '❌', q: document.querySelector('.q-text').textContent, cat: document.querySelector('.q-cat-tag').textContent.trim() });
+    updateHistory();
+    document.getElementById('go-btn').disabled = false;
+  }
 }
 
 function updateStats() {
