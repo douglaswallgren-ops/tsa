@@ -633,7 +633,7 @@
 </div>
 
 <script>
-const QUIZAPI_PROXY = 'https://quizapi-proxy.douglas-wallgren.workers.dev';
+const QUIZAPI_KEY = 'qa_sk_174ed18e31eea1cd8a66d0d83b9ed72780b93666'; // TODO: move to Cloudflare Worker proxy
 
 // ─── Source definitions ───────────────────────────────────────────────────────
 // Each source has its own cache and category mapping.
@@ -934,11 +934,11 @@ function convertQuizApiQuestion(item) {
 
 async function fetchQuizApiBatch(catId) {
   const category = SOURCES.quizapi.catMap[catId] || 'Programming';
-  const url = `${QUIZAPI_PROXY}?limit=15&category=${encodeURIComponent(category)}&difficulty=medium&include_answers=true`;
+  const url = `https://quizapi.io/api/v1/questions?limit=15&category=${encodeURIComponent(category)}&difficulty=medium&include_answers=true`;
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), 6000);
   try {
-    const r = await fetch(url, { signal: ctrl.signal });
+    const r = await fetch(url, { signal: ctrl.signal, headers: { 'Authorization': `Bearer ${QUIZAPI_KEY}` } });
     const d = await r.json();
     const arr = Array.isArray(d) ? d : (d.data || []);
     return arr
@@ -1000,7 +1000,7 @@ async function checkSources() {
     const ctrl = new AbortController();
     const t = setTimeout(() => ctrl.abort(), 6000);
     try {
-      const r = await fetch(`${QUIZAPI_PROXY}?limit=1`, { signal: ctrl.signal });
+      const r = await fetch('https://quizapi.io/api/v1/questions?limit=1', { signal: ctrl.signal, headers: { 'Authorization': `Bearer ${QUIZAPI_KEY}` } });
       const d = await r.json();
       const arr = Array.isArray(d) ? d : (d.data || []);
       setSourceStatus('quizapi', arr.length ? 'ok' : 'err');
