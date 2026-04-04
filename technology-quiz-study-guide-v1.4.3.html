@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- TSA Tech Bowl Study Tool v1.4.3 -->
+<!-- Technology Quiz Study Guide v1.4.3 -->
 <!-- Copyright Douglas Wallgren -->
 <html lang="en">
 <head>
@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<title>TSA Tech Bowl — Study Tool v1.4.3</title>
+<title>Technology Quiz Study Guide v1.4.3</title>
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow:wght@300;400;600;700;900&family=Barlow+Condensed:wght@700;900&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -529,7 +529,7 @@
 <!-- ─── Login overlay ──────────────────────────────────────────────────────── -->
 <div id="login-overlay" class="login-overlay">
   <div class="login-card">
-    <h2>TSA Tech Bowl</h2>
+    <h2>Technology Quiz Study Guide</h2>
     <div class="login-sub">// IDENTIFY YOURSELF — ENTER USERNAME TO CONTINUE</div>
     <input id="login-input" class="login-input" type="text" placeholder="USERNAME"
            maxlength="20" autocomplete="off" autocapitalize="none" spellcheck="false">
@@ -545,7 +545,7 @@
 <div class="app">
   <header>
     <div class="logo-block">
-      <h1>TSA Tech Bowl</h1>
+      <h1>Technology Quiz Study Guide</h1>
       <p>// STUDY TERMINAL — STATE COMPETITION PREP &nbsp;·&nbsp; v1.4.3</p>
     </div>
     <div class="countdown">
@@ -638,7 +638,7 @@ const SOURCES = {
     label: 'OPEN TRIVIA DB',
     cache: {},
     // https://opentdb.com/api_category.php
-    // All TSA topics map to 18 (Science: Computers) — the only specifically
+    // All topics map to 18 (Science: Computers) — the only specifically
     // tech-focused category.  Cat 17 (Science & Nature) returns biology/
     // chemistry which is off-topic for this tool.
     catMap: {
@@ -684,12 +684,22 @@ const enabledSources = { opentdb: true, triviaapi: true };
 let isFetching = false;
 
 // ─── User / stats persistence ─────────────────────────────────────────────────
-const DB_KEY = 'tsaBowl_v1_users';
+const DB_KEY = 'techQuizStudyGuide_v1_users';
 
 const BLOCKED_WORDS = [
+  // sexual / explicit
   'fuck','shit','bitch','cunt','ass','cock','dick','pussy',
-  'nigger','nigga','faggot','fag','whore','slut','retard',
-  'bastard','piss','porn','sex','rape','nazi',
+  'whore','slut','porn','sex','rape','piss','bastard',
+  'boob','tit','tits','penis','vagina','anus','anal',
+  'blowjob','handjob','dildo','cum','jizz','sperm','orgasm',
+  'horny','nude','naked','erotic','hentai',
+  // slurs
+  'nigger','nigga','faggot','fag','retard','chink','spic',
+  'kike','gook','wetback','cracker','tranny','dyke',
+  // hate / extremism
+  'nazi','hitler','kkk','jihad','terrorist',
+  // violence / shock
+  'kill','murder','suicide','genocide','torture',
 ];
 const BLOCKED_PATTERNS = BLOCKED_WORDS.map(w =>
   new RegExp(w.split('').join('.{0,1}'), 'i')
