@@ -32,10 +32,10 @@ export default {
     incoming.searchParams.forEach((v, k) => {
       if (k !== 'apiKey') target.searchParams.set(k, v);
     });
-    target.searchParams.set('api_key', env.QUIZAPI_KEY);
-
-    const upstream = await fetch(target.toString());
-    const body     = await upstream.text();
+    const upstream = await fetch(target.toString(), {
+      headers: { 'Authorization': `Bearer ${env.QUIZAPI_KEY}` },
+    });
+    const body = await upstream.text();
     console.log('upstream status:', upstream.status);
 
     return new Response(body, {

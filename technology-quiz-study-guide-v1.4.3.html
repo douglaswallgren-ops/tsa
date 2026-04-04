@@ -934,7 +934,7 @@ function convertQuizApiQuestion(item) {
 
 async function fetchQuizApiBatch(catId) {
   const category = SOURCES.quizapi.catMap[catId] || 'Programming';
-  const url = `${QUIZAPI_PROXY}?limit=15&category=${encodeURIComponent(category)}&difficulty=Medium`;
+  const url = `${QUIZAPI_PROXY}?limit=15&category=${encodeURIComponent(category)}&difficulty=medium&include_answers=true`;
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), 6000);
   try {
