@@ -581,6 +581,9 @@
     <button class="src-btn active" id="src-triviaapi" onclick="toggleSource('triviaapi')">
       <span class="src-dot" id="dot-triviaapi">◌</span> THE TRIVIA API
     </button>
+    <button class="src-btn active" id="src-quizapi" onclick="toggleSource('quizapi')">
+      <span class="src-dot" id="dot-quizapi">◌</span> QUIZ API
+    </button>
   </div>
 
   <div class="mode-row">
@@ -630,6 +633,8 @@
 </div>
 
 <script>
+const QUIZAPI_PROXY = 'https://quizapi-proxy.douglas-wallgren.workers.dev';
+
 // ─── Source definitions ───────────────────────────────────────────────────────
 // Each source has its own cache and category mapping.
 // ─── Source configurations ────────────────────────────────────────────────────
@@ -676,10 +681,30 @@ const SOURCES = {
       robotics:      { categories: 'science', tags: 'Artificial Intelligence,Technology' },
     },
   },
+  quizapi: {
+    label: 'QUIZ API',
+    cache: {},
+    // https://quizapi.io/api/v1/questions
+    // Maps each app category to the best-matching QuizAPI category string.
+    catMap: {
+      computing:     'Linux',
+      programming:   'Programming',
+      math:          'Mathematics',
+      history:       'Programming',
+      electronics:   'Programming',
+      engineering:   'DevOps',
+      biotech:       'Programming',
+      aerospace:     'Programming',
+      energy:        'Programming',
+      materials:     'Programming',
+      cybersecurity: 'Cybersecurity',
+      robotics:      'Data Science',
+    },
+  },
 };
 
 // Which sources the user has enabled (all on by default)
-const enabledSources = { opentdb: true, triviaapi: true };
+const enabledSources = { opentdb: true, triviaapi: true, quizapi: true };
 
 let isFetching = false;
 
@@ -885,6 +910,55 @@ async function pickTriviaApiQuestion(catId) {
   return cache[catId].shift();
 }
 
+// ─── Quiz API ─────────────────────────────────────────────────────────────────
+function convertQuizApiQuestion(item) {
+  const keys = ['answer_a','answer_b','answer_c','answer_d','answer_e','answer_f'];
+  const correctKey = keys.find(k => item.correct_answers[`${k}_correct`] === 'true');
+  if (!correctKey || !item.answers[correctKey]) return null;
+  const correctText = item.answers[correctKey];
+  const opts = keys.filter(k => item.answers[k]).map(k => item.answers[k]);
+  for (let i = opts.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [opts[i], opts[j]] = [opts[j], opts[i]];
+  }
+  return {
+    q:      item.question,
+    opts,
+    a:      opts.indexOf(correctText),
+    exp:    item.explanation
+              ? `Quiz API · ${item.category} · ${item.explanation}`
+              : `Quiz API · ${item.category} · difficulty: ${item.difficulty}`,
+    source: 'quizapi',
+  };
+}
+
+async function fetchQuizApiBatch(catId) {
+  const category = SOURCES.quizapi.catMap[catId] || 'Programming';
+  const url = `${QUIZAPI_PROXY}?limit=15&category=${encodeURIComponent(category)}&difficulty=Medium`;
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), 6000);
+  try {
+    const r = await fetch(url, { signal: ctrl.signal });
+    const d = await r.json();
+    const arr = Array.isArray(d) ? d : (d.data || []);
+    return arr
+      .filter(item => item.multiple_correct_answers !== 'true')
+      .map(convertQuizApiQuestion)
+      .filter(Boolean);
+  } catch (_) {} finally { clearTimeout(t); }
+  return [];
+}
+
+async function pickQuizApiQuestion(catId) {
+  const cache = SOURCES.quizapi.cache;
+  if (!cache[catId] || !cache[catId].length) {
+    const batch = await fetchQuizApiBatch(catId);
+    if (!batch.length) return null;
+    cache[catId] = batch;
+  }
+  return cache[catId].shift();
+}
+
 // ─── Source selector UI helpers ───────────────────────────────────────────────
 function setSourceStatus(id, state) {
   const dot = document.getElementById(`dot-${id}`);
@@ -920,6 +994,17 @@ async function checkSources() {
       const d = await r.json();
       setSourceStatus('triviaapi', Array.isArray(d) && d.length ? 'ok' : 'err');
     } catch (_) { setSourceStatus('triviaapi', 'err'); } finally { clearTimeout(t); }
+  })();
+
+  (async () => {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 6000);
+    try {
+      const r = await fetch(`${QUIZAPI_PROXY}?limit=1`, { signal: ctrl.signal });
+      const d = await r.json();
+      const arr = Array.isArray(d) ? d : (d.data || []);
+      setSourceStatus('quizapi', arr.length ? 'ok' : 'err');
+    } catch (_) { setSourceStatus('quizapi', 'err'); } finally { clearTimeout(t); }
   })();
 }
 
@@ -1145,6 +1230,7 @@ async function nextQuestion() {
     try {
       if (src === 'opentdb')   q = await pickOtdbQuestion(catId);
       if (src === 'triviaapi') q = await pickTriviaApiQuestion(catId);
+      if (src === 'quizapi')   q = await pickQuizApiQuestion(catId);
       if (q) break;
     } catch (_) {}
   }
